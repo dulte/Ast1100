@@ -185,13 +185,13 @@ For kjøringen av denne simuleringen brukte jeg et smart triks som forenkler kod
 Fra denne simuleringen får jeg:
 
 \begin{tcolorbox}
-Analytical Pressure:  13756.1188494 \\
-Numerical Pressure:  13800.0 \\
+Numerical Pressure:  13756.1188494 \\
+Analytical Pressure:  13800.0 \\
 Analytical energy:  2.07e-19 \\
 Numerical energy:  2.06623799518e-19 
 \end{tcolorbox}
 
-Dette viser at jeg har fått et ganske godt resultat og kan gå videre.
+Som vi kan se har vi fått det vi ønsket: en boks med partikler, hvor både trykket og den kinetiske energien er veldig nært den analytiske. Vi kan da gå videre til hullet i boksen. 
 
 \subsection{En lekkende boks}
 
@@ -227,7 +227,7 @@ Number of particles escaped per sec:  6.4252e+13 \\
 Mass lost per sec:  2.120316e-13
 \end{tcolorbox}
 
-Som vi kan se hadde vi rett, ca $\frac{1}{4}$ av partiklene som traff gulvet forsvant. Men de to tallene vi får bruk for senere er kraften og masse tapt per sekund. Nå som vi har dette, har vi en fungerende motor, og vi kan sende raketen ut i bane
+Som vi kan se hadde vi rett, ca $\frac{1}{4}$ av partiklene som traff gulvet forsvant. Men de to tallene vi får bruk for senere er kraften og masse tapt per sekund. Nå som vi har dette, har vi en fungerende motor, og vi kan sende raketten ut i bane.
 
 
 
@@ -272,7 +272,7 @@ Vi kan nå bruke dette antallet med bokser, og regne ut hvor mye bensin vi treng
 
 Siden vi ikke tok med drivstoff når vi beregnet massen, får vi en fin lineær funksjon for hastigheten. \\
 
-Men dette er en urealistisk mengde drivstoff. I en virkelig rakett må man også bære på mass av drivstoffet. I tilegg mister man drivstoff, som gjør at raketten blir lettere, og derfor akselererer raskere jo mer masse som forsvinner. Vi forventer derfor en ikke lineær graf. Her skal vi først bare gjette oss frem til drivstoffet, før vi i neste avsnitt regner oss frem til hvor mye vi trenger. Jeg gjettet ca 4100 kg drivstoff, etter litt prøving og feiling. Vi får da denne grafen:
+Men dette er en urealistisk mengde drivstoff. I en virkelig rakett må man også bære på mass av drivstoffet. I tilegg mister man drivstoff, som gjør at raketten blir lettere, og derfor akselererer raskere jo mer masse som forsvinner. Vi forventer derfor en ikke lineær graf. Her skal vi først bare gjette oss frem til drivstoffet, før vi i neste avsnitt regner oss frem til hvor mye vi trenger. Jeg gjettet ca 4100 kg drivstoff, etter litt prøving og feiling. 
 
 \begin{figure}[hbt]
 \begin{center}
@@ -281,7 +281,7 @@ Men dette er en urealistisk mengde drivstoff. I en virkelig rakett må man også
 \end{center}
 \end{figure} 
 
-Med denne gjetningen satt jeg igjen med 12 kg drivstoff, som var ganske nært --jeg jukset litt og brukte formelen jeg regner ut i neste avsnitt. Vi kan også se at stemte antagelsene om hvordan grafen til hastigheten ville se ut. I virkeligheten vil også tyngdekraften spilt en rolle her, og vi ville hatt måtte brukt mye mer drivstoff. \\
+Med denne gjetningen satt jeg igjen med 12 kg drivstoff, som var ganske nært --jeg jukset litt og brukte formelen jeg regner ut i neste avsnitt. (fig 2). Vi kan også se at stemte antagelsene om hvordan grafen til hastigheten ville se ut. I virkeligheten vil også tyngdekraften spilt en rolle her, og vi ville hatt måtte brukt mye mer drivstoff. \\
 
 Men det er en lang reise vi skal begi oss ut på, så om vi skulle gjettet os frem til riktig mengde drivstoff, ville vi måtte brukt mye tid på prøving of feiling. I stedenfor kan vi regne ut hvor mye vi trenger.
 
