@@ -12,69 +12,128 @@ simulationTime = 20#In years
 steps = 20000 #Steps per year
 dt = 1./steps
 
-writeingFreq = 10
+G = 4*np.pi**2
+
+use_many_body = True
+number_for_N_body = 3
+
+
+
+
+writeingFreq = 100
 
 if (float(steps*simulationTime)/writeingFreq - steps*simulationTime/writeingFreq) != 0.0:
     print "change writeingFreq"
     sys.exit()
 
 
-times_around = 0
-
-G = 4*np.pi**2
-
-use_many_body = True
-
-#Vaaribles about the planets and star
-N = system.numberOfPlanets
-
-try:
-    postions = np.zeros([2,N + 1,steps*simulationTime/writeingFreq]) #Number of datapoints, numb of planets and star, 2 coordinates
-except:
-    print "change writeingFreq"
-temp_pos = np.zeros([2,N+1])
-velocity = np.zeros([2,N + 1])#,steps*simulationTime])
-sun_vel = np.zeros([2,steps*simulationTime/writeingFreq])
-sun_pos = np.zeros([2,steps*simulationTime/writeingFreq])
-
-masses = np.zeros(N+1)
-periods = np.zeros(N+1)
-acceleration = np.zeros([2,N+1])
-
-time = np.linspace(0,simulationTime,int(steps*simulationTime))
-print time
-
-sunMass = system.starMass
-masses[N] = sunMass
-print "mass: ", sunMass
-print "Temp: ",system.temperature
-print "Radius: ",system.starRadius
-print "___"
-print len(system.mass)
-
-#Initializing the arrays
-for i in range(N):
-    masses[i] = system.mass[i]
-    print "Planet %s " %str(i+1)
-    print "Planet mass: ",masses[i]
-    print "Planet radius: ",system.radius[i]
-
-    postions[0,i,0] = system.x0[i]
-    postions[1,i,0] = system.y0[i]
-    temp_pos[0,i] = system.x0[i]
-    temp_pos[1,i] = system.y0[i]
 
 
 
-    velocity[0,i] = system.vx0[i]
-    velocity[1,i] = system.vy0[i]
 
-    periods[i] = (2*np.pi/system.period[i])*360.
-    print "Planet dtheta: ",periods[i]
+if (not use_many_body and (number_for_N_body != system.numberOfPlanets)):
 
-    print "----"
+    N = system.numberOfPlanets
+
+    try:
+        postions = np.zeros([2,N + 1,steps*simulationTime/writeingFreq]) #Number of datapoints, numb of planets and star, 2 coordinates
+    except:
+        print "change writeingFreq"
+
+    temp_pos = np.zeros([2,N+1])
+    velocity = np.zeros([2,N + 1])#,steps*simulationTime])
+    sun_vel = np.zeros([2,steps*simulationTime/writeingFreq])
+    sun_pos = np.zeros([2,steps*simulationTime/writeingFreq])
+
+    masses = np.zeros(N+1)
+    periods = np.zeros(N+1)
+    acceleration = np.zeros([2,N+1])
+
+    time = np.linspace(0,simulationTime,int(steps*simulationTime))
+    print time
+
+    sunMass = system.starMass
+    masses[N] = sunMass
+    print "mass: ", sunMass
+    print "Temp: ",system.temperature
+    print "Radius: ",system.starRadius
+    print "___"
+    print len(system.mass)
 
 
+
+
+    #Initializing the arrays
+    for i in range(N):
+        masses[i] = system.mass[i]
+        print "Planet %s " %str(i+1)
+        print "Planet mass: ",masses[i]
+        print "Planet radius: ",system.radius[i]
+
+        postions[0,i,0] = system.x0[i]
+        postions[1,i,0] = system.y0[i]
+        temp_pos[0,i] = system.x0[i]
+        temp_pos[1,i] = system.y0[i]
+
+
+
+        velocity[0,i] = system.vx0[i]
+        velocity[1,i] = system.vy0[i]
+
+        periods[i] = (2*np.pi/system.period[i])*360.
+        print "Planet dtheta: ",periods[i]
+
+        print "----"
+else:
+
+    N = number_for_N_body
+
+
+    try:
+        postions = np.zeros([2,N + 1,steps*simulationTime/writeingFreq]) #Number of datapoints, numb of planets and star, 2 coordinates
+    except:
+        print "change writeingFreq"
+
+    index_biggest_masses = []
+    temp_pos = np.zeros([2,N+1])
+    velocity = np.zeros([2,N + 1])#,steps*simulationTime])
+    sun_vel = np.zeros([2,steps*simulationTime/writeingFreq])
+    sun_pos = np.zeros([2,steps*simulationTime/writeingFreq])
+
+    complet_list_masses = np.array(system.mass)
+    masses = np.zeros(N+1)
+    periods = np.zeros(N+1)
+    acceleration = np.zeros([2,N+1])
+
+    sunMass = system.starMass
+    masses[N] = sunMass
+
+    index_biggest = np.argsort(complet_list_masses)
+    for i in range(N):
+        index_biggest_masses.append(index_biggest[-i-1])
+        masses[i] = system.mass[index_biggest[-i-1]]
+
+
+    for i in range(N):
+        masses[i] = system.mass[index_biggest_masses[i]]
+        print "Planet %s " %str(i+1)
+        print "Planet mass: ",masses[i]
+        print "Planet radius: ",system.radius[index_biggest_masses[i]]
+
+        postions[0,i,0] = system.x0[index_biggest_masses[i]]
+        postions[1,i,0] = system.y0[index_biggest_masses[i]]
+        temp_pos[0,i] = system.x0[index_biggest_masses[i]]
+        temp_pos[1,i] = system.y0[index_biggest_masses[i]]
+
+
+
+        velocity[0,i] = system.vx0[index_biggest_masses[i]]
+        velocity[1,i] = system.vy0[index_biggest_masses[i]]
+
+        periods[i] = (2*np.pi/system.period[index_biggest_masses[i]])*360.
+        print "Planet dtheta: ",periods[i]
+
+        print "----"
 
 
 
@@ -110,13 +169,6 @@ if(use_many_body):
 
 
 
-
-
-
-
-
-
-
     velocity += 0.5*acceleration*dt
 
     for step in xrange(steps*simulationTime-1):
@@ -148,12 +200,6 @@ if(use_many_body):
 
         print (float(step)/(steps*simulationTime))*100, "%            \r",
     print ""
-
-
-
-
-
-
 
 
 
@@ -194,4 +240,6 @@ plt.plot(postions[0,N,:],postions[1,N,:])
 
 plt.show()
 plt.plot(sun_vel[0])
+plt.show()
+plt.plot(np.fft.ifft(sun_vel[0]))
 plt.show()
