@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 from AST1100SolarSystem import AST1100SolarSystem
@@ -11,116 +12,267 @@ simulationTime = 20#In years
 steps = 20000 #Steps per year
 dt = 1./steps
 
-
-times_around = 0
-
 G = 4*np.pi**2
+c = 63239.7263 #AU/year
+AU_per_year_to_SI = 4740.57172
 
-use_many_body = False
-
-#Vaaribles about the planets and star
-N = system.numberOfPlanets
-postions = np.zeros([2,N + 1,steps*simulationTime]) #Number of datapoints, numb of planets and star, 2 coordinates
-velocity = np.zeros([2,N + 1])#,steps*simulationTime])
-
-masses = np.zeros(N+1)
-periods = np.zeros(N+1)
-acceleration = np.zeros([2,N+1])
-
-time = np.linspace(0,simulationTime,int(steps*simulationTime))
-print time
-
-sunMass = system.starMass
-masses[N] = sunMass
-print "mass: ", sunMass
-print "Temp: ",system.temperature
-print "Radius: ",system.starRadius
-print "___"
-print len(system.mass)
-
-#Initializing the arrays
-for i in range(N):
-    masses[i] = system.mass[i]
-    print "Planet %s " %str(i+1)
-    print "Planet mass: ",masses[i]
-    print "Planet radius: ",system.radius[i]
-
-    postions[0,i,0] = system.x0[i]
-    postions[1,i,0] = system.y0[i]
+use_many_body = True
+number_for_N_body = 3
 
 
 
-    velocity[0,i] = system.vx0[i]
-    velocity[1,i] = system.vy0[i]
 
-    periods[i] = (2*np.pi/system.period[i])*360.
-    print "Planet dtheta: ",periods[i]
 
-    print "----"
+writeingFreq = 100
+
+if (float(steps*simulationTime)/writeingFreq - steps*simulationTime/writeingFreq) != 0.0:
+    print "change writeingFreq"
+    sys.exit()
+
+
+time = np.linspace(0,simulationTime,int(steps*simulationTime/writeingFreq))
+
+
+
+if (not use_many_body and (number_for_N_body != system.numberOfPlanets)):
+
+    N = system.numberOfPlanets
+
+    try:
+        postions = np.zeros([2,N + 1,steps*simulationTime/writeingFreq]) #Number of datapoints, numb of planets and star, 2 coordinates
+    except:
+        print "change writeingFreq"
+
+    temp_pos = np.zeros([2,N+1])
+    velocity = np.zeros([2,N + 1])#,steps*simulationTime])
+    sun_vel = np.zeros([2,steps*simulationTime/writeingFreq])
+    sun_pos = np.zeros([2,steps*simulationTime/writeingFreq])
+
+    masses = np.zeros(N+1)
+    periods = np.zeros(N+1)
+    acceleration = np.zeros([2,N+1])
+
+
+
+    sunMass = system.starMass
+    masses[N] = sunMass
+
+    b = 2900 # Wien's displacement constant in micrometers
+    sun_waveLenght = b/system.temperature
+
+    print "mass: ", sunMass
+    print "Temp: ",system.temperature
+    print "Wavelenght: ", sun_waveLenght
+    print "Radius: ",system.starRadius
+    print "___"
+    print len(system.mass)
+
+
+
+
+    #Initializing the arrays
+    for i in range(N):
+        masses[i] = system.mass[i]
+        print "Planet %s " %str(i+1)
+        print "Planet mass: ",masses[i]
+        print "Planet radius: ",system.radius[i]
+
+        postions[0,i,0] = system.x0[i]
+        postions[1,i,0] = system.y0[i]
+        temp_pos[0,i] = system.x0[i]
+        temp_pos[1,i] = system.y0[i]
+
+
+
+        velocity[0,i] = system.vx0[i]
+        velocity[1,i] = system.vy0[i]
+
+        periods[i] = (2*np.pi/system.period[i])*360.
+        print "Planet dtheta: ",periods[i]
+
+        print "----"
+else:
+
+    N = number_for_N_body
+
+    b = 2900 # Wien's displacement constant in micrometers
+    sun_waveLenght = b/system.temperature
+    sunMass = system.starMass
+
+    print "mass: ", sunMass
+    print "Temp: ",system.temperature
+    print "Wavelenght: ", sun_waveLenght
+    print "Radius: ",system.starRadius
+    print "___"
+    print len(system.mass)
+
+
+    try:
+        postions = np.zeros([2,N + 1,steps*simulationTime/writeingFreq]) #Number of datapoints, numb of planets and star, 2 coordinates
+    except:
+        print "change writeingFreq"
+
+    index_biggest_masses = []
+    temp_pos = np.zeros([2,N+1])
+    velocity = np.zeros([2,N + 1])#,steps*simulationTime])
+    sun_vel = np.zeros([2,steps*simulationTime/writeingFreq])
+    sun_pos = np.zeros([2,steps*simulationTime/writeingFreq])
+
+    complet_list_masses = np.array(system.mass)
+    masses = np.zeros(N+1)
+    periods = np.zeros(N+1)
+    acceleration = np.zeros([2,N+1])
+
+
+    masses[N] = sunMass
+
+    index_biggest = np.argsort(complet_list_masses)
+    for i in range(N):
+        index_biggest_masses.append(index_biggest[-i-1])
+        masses[i] = system.mass[index_biggest[-i-1]]
+
+
+    for i in range(N):
+        masses[i] = system.mass[index_biggest_masses[i]]
+        print "Planet %s " %str(i+1)
+        print "Planet mass: ",masses[i]
+        print "Planet radius: ",system.radius[index_biggest_masses[i]]
+
+        postions[0,i,0] = system.x0[index_biggest_masses[i]]
+        postions[1,i,0] = system.y0[index_biggest_masses[i]]
+        temp_pos[0,i] = system.x0[index_biggest_masses[i]]
+        temp_pos[1,i] = system.y0[index_biggest_masses[i]]
+
+
+
+        velocity[0,i] = system.vx0[index_biggest_masses[i]]
+        velocity[1,i] = system.vy0[index_biggest_masses[i]]
+
+        periods[i] = (2*np.pi/system.period[index_biggest_masses[i]])*360.
+        print "Planet dtheta: ",periods[i]
+
+        print "----"
+
+
+
+
+
 if(use_many_body):
 
-    for step in range(steps*simulationTime-1):
+    mom = np.zeros(2)
+    mom[0] = np.sum(velocity[0,:]*masses)
+    mom[1] = np.sum(velocity[1,:]*masses)
 
-        for i in range(N+1):
-            acceleration[i,:] = 0
-            for j in range(N+1):
-                r = np.sqrt((postions[step,i,0]-postions[step,j,0])**2 + (postions[step,i,1]-postions[step,j,1])**2)
-                if (r>1.e-4):
-                    acceleration[i,0] = -G*masses[j]/(r**3)*(postions[step,i,0]-postions[step,j,0])
+    velocity[:,-1] = -mom/sunMass
 
-                    acceleration[i,1] = -G*masses[j]/(r**3)*(postions[step,i,1]-postions[step,j,1])
 
-        velocity[step+1,:,0] = velocity[step,:,0] + acceleration[:,0]*dt
-        postions[step+1,:,0] = postions[step,:,0] + velocity[step+1,:,0]*dt
 
-        velocity[step+1,:,1] = velocity[step,:,1] + acceleration[:,1]*dt
-        postions[step+1,:,1] = postions[step,:,1] + velocity[step+1,:,1]*dt
+    for i in xrange(N+1):
+        acceleration[:,i] = 0
+        rx = (temp_pos[0,:] - float(temp_pos[0,i]))**2
+        ry = (temp_pos[1,:] - float(temp_pos[1,i]))**2
+        other_p = np.power(rx+ry,3./2) > 1.e-5
+        some = np.maximum(np.power(rx+ry,3./2),1.e-5)
+        acceleration[0,i] = np.sum(other_p*(G*masses[:]/some*(temp_pos[0,:] - float(temp_pos[0,i]))))
+        acceleration[1,i] = np.sum(other_p*(G*masses[:]/some*(temp_pos[1,:] - float(temp_pos[1,i]))))
 
-        if (np.arctan(postions[step,0,1]/postions[step,0,0]) < 0 and np.arctan(postions[step+1,0,1]/postions[step+1,0,0]) > 0 ):
-            times_around += 1
+
+    #
+    # for i in range(N+1):
+    #     acceleration[:,i] = 0
+    #     for j in range(N+1):
+    #         r = norm(temp_pos[:,i]-temp_pos[:,j])
+    #         if (r>1.e-4):
+    #             acceleration[:,i] += -G*masses[j]/(r**3)*(temp_pos[:,i]-temp_pos[:,j])
+
+
+
+    velocity += 0.5*acceleration*dt
+
+    for step in xrange(steps*simulationTime-1):
+
+        temp_pos += velocity*dt
+
+        for i in xrange(N+1):
+            acceleration[:,i] = 0
+            rx = (temp_pos[0,:] - float(temp_pos[0,i]))**2
+            ry = (temp_pos[1,:] - float(temp_pos[1,i]))**2
+            other_p = np.power(rx+ry,3./2) > 1.e-5
+            some = np.maximum(np.power(rx+ry,3./2),1.e-5)
+            acceleration[0,i] = np.sum(other_p*(G*masses[:]/some*(temp_pos[0,:] - float(temp_pos[0,i]))))
+            acceleration[1,i] = np.sum(other_p*(G*masses[:]/some*(temp_pos[1,:] - float(temp_pos[1,i]))))
+
+        # for i in range(N+1):
+        #     acceleration[:,i] = 0
+        #     for j in range(N+1):
+        #         r = norm(temp_pos[:,i]-temp_pos[:,j])
+        #         if (r>1.e-4):
+        #             acceleration[:,i] = -G*masses[j]/(r**3)*(temp_pos[:,i]-temp_pos[:,j])
+
+        velocity += acceleration*dt
+
+        if ((step+1)%writeingFreq == 0):
+            postions[:,:,step/writeingFreq + 1] = temp_pos[:,:]
+            sun_pos[:,step/writeingFreq +1] = temp_pos[:,-1]
+            sun_vel[:,step/writeingFreq +1] = velocity[:,-1]
 
         print (float(step)/(steps*simulationTime))*100, "%            \r",
     print ""
+
+
+
 else:
-    print velocity[:,:N]
-    for p in xrange(N):
-        acceleration[:,p] = -G*sunMass/(norm(postions[:,p,0])**3)*postions[:,p,0]
+    acceleration = -G*sunMass/(norm(temp_pos[:,:N],axis = 0)**3)*temp_pos[:,:N]
     velocity[:,:N] += 0.5*acceleration[:,:N]*dt
 
 
     for step in xrange(steps*simulationTime-1):
 
 
-        postions[:,:N,step+1] = postions[:,:N,step] + velocity[:,:N]*dt
-        for p in xrange(N):
-            acceleration[:,p] = -G*sunMass/(norm(postions[:,p,step+1])**3)*postions[:,p,step+1]
+        temp_pos[:,:N] += velocity[:,:N]*dt
+
+        acceleration = -G*sunMass/(norm(temp_pos[:,:N],axis = 0)**3)*temp_pos[:,:N]
 
 
         velocity[:,:N] += acceleration[:,:N]*dt
 
 
-
-
-        #velocity[:,:N,step+1] = temp_vel[:,:N] + 0.5*acceleration[:,:N]*dt
-
-
-
-        if (np.arctan(postions[1,0,step]/postions[0,0,step]) < 0 and np.arctan(postions[1,0,step+1]/postions[0,0,step+1]) > 0 ):
-            times_around += 1
+        if ((step+1)%writeingFreq == 0):
+            postions[:,:,step/writeingFreq + 1] = temp_pos[:,:]
 
         print (float(step)/(steps*simulationTime))*100, "%            \r",
     print ""
-print times_around
 
-system.checkPlanetPositions(postions,simulationTime,20000)
+
+
+#system.checkPlanetPositions(postions,simulationTime,steps/writeingFreq)
 #system.orbitXml(postions[:,:N,:],time)
+
+
+plt.xlabel("Position [AU]")
+plt.ylabel("Position [AU]")
+plt.axis("equal")
 for p in range(N):
     plt.plot(postions[0,p,-1],postions[1,p,-1],"o")
     plt.plot(postions[0,p,0],postions[1,p,0],"x")
     plt.plot(postions[0,p,:],postions[1,p,:])
 
 plt.plot(postions[0,N,-1],postions[1,N,-1],"y*")
-#plt.plot(postions[0,p,0],postions[0,p,1],"x")
+
 plt.plot(postions[0,N,:],postions[1,N,:])
 
 plt.show()
+if (use_many_body):
+    random_noice_vel = []
+    for i in sun_vel[0]:
+        random_noice_vel.append(i + np.random.normal(0,(1./5)*np.max(sun_vel[0])))
+    plt.xlabel("Time[years]")
+    plt.ylabel("Velocity [m/s]")
+    plt.plot(time,sun_vel[0]*AU_per_year_to_SI)
+    plt.show()
+    plt.xlabel("Time[years]")
+    plt.ylabel("Velocity [m/s]")
+    plt.plot(time,np.array(random_noice_vel)*AU_per_year_to_SI)
+    plt.show()
+    # plt.plot(np.fft.ifft(sun_vel[0]))
+    # plt.show()

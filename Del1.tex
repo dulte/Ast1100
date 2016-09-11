@@ -233,6 +233,8 @@ Som vi kan se hadde vi rett, ca $\frac{1}{4}$ av partiklene som traff gulvet for
 
 \section{Utregning av drivstoff}
 
+!!! Siden jeg har byttet seed, må jeg forandre tallene under !!!
+
 \begin{abstract}
 Nå som vi har en motor, og vet hvor mye kraft den gir fra seg og hvor mye masse som forsvinner fra den, kan vi se på hvor mange av disse boksene og hvor mye drivstoff vi trenger, for å sende denne raketten ut i verdensrommet.
 \end{abstract}
@@ -264,7 +266,7 @@ Vi kan nå bruke dette antallet med bokser, og regne ut hvor mye bensin vi treng
 
 \begin{figure}[hbt]
 \begin{center}
-\includegraphics[width=\textwidth]{Fuel_simple.png}
+\includegraphics[width=70mm]{Fuel_simple.png}
 \caption{Simpel drivstoffutregning}\label{fig:finfigur}
 \end{center}
 \end{figure} 
@@ -276,7 +278,7 @@ Men dette er en urealistisk mengde drivstoff. I en virkelig rakett må man også
 
 \begin{figure}[hbt]
 \begin{center}
-\includegraphics[width=\textwidth]{Fuel_real.png}
+\includegraphics[width=70mm]{Fuel_real.png}
 \caption{Mer realistisk utregning}\label{fig:finfigur}
 \end{center}
 \end{figure} 
@@ -352,6 +354,170 @@ m_{f0} = m_l(e^{\frac{\Delta v n_e}{F_b}} - 1)
 \end{equation}
 
 Vi har nå funnet en enkel formel for å kunne regne ut mengden drivfstoff vi trenger.
+\newpage
+
+
+
+\part{Solsystemet}
+
+\newpage
+
+\begin{abstract}
+I denne delen skal vi regne ut banene til planetene til stjernen. Vi skal også sjekke om det er mulig for en annen sivilisasjon å kunne avgjøre om solsystemet har planeter.
+\end{abstract}
+
+\section{Planetbanene}
+
+\subsection{2-legmesystem}
+
+\subsubsection{Teori}
+
+I denne simuleringen av solsystemet skal vi bruke at denne eneste kraften som virker på planetene er gravitasjonen fra stjernen. 
+
+\begin{equation}
+\textbf{F}_\textbf{G} = m_p \frac{d^{2}\textbf{r}}{dt^{2}} = -\frac{Gm_p m_s}{r^{3}}\textbf{r}
+\end{equation}
+
+\subsubsection{Metode}
+
+For å løse denne differensiallikningen blir Euler-Cromer litt for unøyaktig. Dette er fordi vi har et system med harmoniske bevegelser(sirkelbevegelse). Bruker man noe som en vanlig Euler-metode, vil systemet for hver rundt får litt ekstra, kunstig, energi. Så etterhvert vil banene blir mer og mer unøyaktig. Euler-Cromer bevarer $nesten$ energien, så for små systemer, som feks pendler, er den god nok. Men for større systemer må vi bruker noe som bevarer energi bedre. Vi bruker derfor en leap frog-metode. Gitt ved algoritmen
+
+$$
+x_i = x_{i-1} + v_{i-1/2} \Delta t 
+$$
+$$
+a_i
+$$
+$$
+v_{i+1/2} = v_{i-1/2} + a_i \Delta t
+$$
+
+Hvor
+
+\begin{equation}
+a_i = -\frac{Gm_s}{r_i^{3}}\textbf{x}_i
+\end{equation}
+
+($\textbf{x}$ er posisjonsvektoren til planeten og $r$ er avstanden fra stjernen) \\
+
+Har vi initialposisjonene og -hastighetene til planetene kan vi bruke algoritmen over til å regne ut banene til planetene. Vi vil at stjernen skal være i origo og stå stille. Planetene skal heller ikke ha noe kraft på stjernen. Stjernen skal derfor stå stille i origo hele tiden.
+
+\subsubsection{Utførelse og resultat}
+
+For å teste metoden vår bruker vi først én planet (fig 3). Jeg bruker 20 år. Solsystemet mitt er ca dobbelt så stort som vårt eget, så planetene bruker litt lengre tid rundt stjernen enn våre kjente planeter.
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[width=70mm]{one_planet.png}
+\caption{Den tyngste planeten i systemet i bane rundt stjernen.}\label{fig:finfigur}
+\end{center}
+\end{figure} 
+
+Ser man nøye kan man se at banene er en ellipse, men har en eksentrisitet $e$ veldig nærme 0.\\
+
+Nå som vi vet at algoritmen fungerer, kan vi plott alle 9 planetene i systemet (fig 4)
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[width=70mm]{full_system.png}
+\caption{Banen til alle planetene i solsystemet i bane i 20 år. $x$ markerer startposisjonen til planetene, men prikken er sluttposisjonen.}\label{fig:finfigur}
+\end{center}
+\end{figure}
+
+Vi har et ganske standard solsystem. Det som mangler er gasskjemper, men det kommer jeg tilbake til senere.
+
+\subsection{Mange-legme-system}
+
+\subsubsection{Teori}
+
+Teorien over er veldig lik den over, eneste forskjellen er at alle planetene skal ha en kraft på alle de andre. De skal også virke en kraft fra planetene på stjernen. Stjernen vil derfor også bevege seg.
+
+\subsubsection{Metode}
+
+Igjen er metoden veldig lik den over. Men når vi regner ut akelerasjonen til planetene (og stjernen) kan vi ikke bare ta med gravitasjonskraften fra sola, men også den fra de andre planetene. Dette betyr at utregningen blir veldig mye treigere, men med god programmering med numpy kan man klare å få den $O(N)$ ganker treigere, som men 9+1 planeter ikke er så ille.
+
+Men som en konsekven av at vi lar stjernen bevege seg og at alle planetene innvirker alle de andre, vil ikke origo være massesenteret lenger. Ikke bare det, men massesenteret vil bevegeseg. Siden bevegelsesmengden til massesenteret er summen av bevegelsesmengden til planetene og stjernen vil
+
+\begin{equation}
+|M\dot{R}| = |\sum\limits_i m_{pi}v_{pi} + m_sv_s| > 0 
+\end{equation}
+
+Siden vi satt hastigheten til stjernet til å være $0$. Men om vi setter bevegelsesmengden til stjerne som det motsatte at summen av bevegelsesmengden til planetene
+
+\begin{equation}
+\sum\limits_i m_{pi}v_{pi} = -m_sv_s
+\end{equation}
+
+kan vi regne ut en initialhastiget for stjernen. Om denne initialhastigheten for stjernen, vil massesenteret stå stille. Dette er en veldig fordel for neste avsnitt.
+
+\subsubsection{Utføring og resultater}
+
+Etter 20 år vil et mange-legme-system med alle 9 planetene se slik ut (fig 5)
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[width=70mm]{full_system_n_body.png}
+\caption{Banen til alle planetene i solsystemet i bane i 20 år. Alle planetene innvirker alle de andre.}\label{fig:finfigur}
+\end{center}
+\end{figure}
+
+Som vi kan se er disse banene nesten helt like de for 2-legmesystet. Dette er fordi stjernen er det desidert størte legmet i systemet. Alle planetene er steinplaneter, så systemt har ingen store gasskjempen. Så selv den største planeten er bare ca $8 \times 10^{-6}$ av størrelsen av stjernen.
+
+\section{Er planeten mulig å se fra et annet solsystem}
+\begin{abstract}
+Her skal vi se om det er mulig for en utenomjordisk sivilisasjon å finne ut at det er planeter rundt solsystemet.
+\end{abstract}
+
+\subsection{Hastighetsgraf for stjernen}
+
+\subsubsection{Teori}
+
+Siden planetene drar på stjernen, vil stjeren -- så vel som planetene -- rotere rundt et massesenter. I forrige avsnitt gjorde vi det slik at massesenteret stod stille ganske nært origo. Når en observator ser på stjernen som beveger seg i en sirkel hvor normalvektoren til sirkelen, optimalt, er 90 grader på synslinjen, vil han se beveger seg mot ham, så fra ham. Når stjernen beveger seg mot ham, vil det være en rødskift på spektret til stjernen, og når stjernen beveger seg vekk, vil det være et blåskift. Det er mulig å måle dette skiftet og bruke
+
+\begin{equation}
+\Delta \lambda = \frac{v}{c}\lambda
+\end{equation} 
+
+til å regne ut hastigheten til stjernen, og videre massen og avstanden til planetene. (Den virkelige hastigheten vil være $v sin i$ hvor i er vinkelen på normalvektoren til banen. Men i resten av avsnittet bruker jeg at i = 90 for å gjøre ting enkelt.)
+
+\subsubsection{Metode}
+
+For å få hastighetskurven til stjernen, finner vi sirkelbevelgelsen til stjernen for de 3 tyngste planetene -- dette er for ikke å gjøre kurvene for innviklet. \\
+
+Vi later så som om vi en observator som ser på stjernen langs x-aksen. Vi kan så plotte x-komponenten til hastigheten til stjernen og se om den er stor nok til å kunne observeres med noe tilsvarende vår teknologi. Vi legger så til litt støy for at plottet skal se mest mulig realitisk ut -- Vi bruker en normalfordeling med $\mu = 0$ og $\sigma = \frac{1}{5} max(v_s)$
+
+
+\subsubsection{Utføring og resultater}
+
+I fig 6 kan man se posisjonen til stjernen over 20 år
+
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[width=70mm]{star_pos_3_planets.png}
+\caption{Banen til stjernen når de 3 tyngste planetene drar på stjernen. Banen er en superposisjon av en stor sirkelbane, men 2 mindre sirkelbaner.(Label på y-aksen mangler fordi det rett og slett ikke var plass til den...)}\label{fig:finfigur}
+\end{center}
+\end{figure}
+
+Jeg laget så et plott av x-komponentet av hastigheten for litt over en omdreining(fig 7). Jeg endret også enhetene til $m/s$ for å letter kunne avgjøre om det er observebart.
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[width=70mm]{vel_no_noice.png}
+\caption{x-hastigheten til solen over 20 år}\label{fig:finfigur}
+\end{center}
+\end{figure}
+
+Vi kan såvidt se at det er en superposisjon av 3 sinusfunksjoner. Vi kan bruke fourieranalyse til å finne de enkelte bølgene, men siden vi bare trenger å se på bunn- og topppunkene av farten, er en slik analyse ikke nødvendig. Vi kan se at farten varierer med $\pm 0.1 m/s$. Med teknologien vi har i dag, har vi muligheten til å måle hastigheter på $1 m/s$. Selv om dette er veldig imponerende, er det 10x for dårlig til å oberservere hastigetsforskjellen til stjeren min. M.a.o utenomjordiske astronomer vil \textbf{ikke} kunne finne planeter rundt min stjerne med denne metoden.\\
+
+Til slutt vil jeg legge ved den mer realistiske kurven, hvor jeg har lagt til normalfordelt støy(fig 8)
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics[width= 70mm]{vel_noice.png}
+\caption{Fartskuven med støy. Ligner med på det man vil se i virkeligheten}\label{fig:finfigur}
+\end{center}
+\end{figure}
 
 
 
