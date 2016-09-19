@@ -3,31 +3,35 @@ import sys
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 from AST1100SolarSystem import AST1100SolarSystem
-seed = 69558 #daniehei5
+#seed = 69558 #daniehei5
+seed = 68074
 system = AST1100SolarSystem(seed,hasMoons=False)
 
 
 #Variables for simulations
-simulationTime = 20#In years
+simulationTime = 100#In years
 steps = 20000 #Steps per year
 dt = 1./steps
 
-G = 4*np.pi**2
+save = False
 
-use_many_body = True
+G = 4*np.pi**2
+c = 63239.7263 #AU/year
+AU_per_year_to_SI = 4740.57172
+
+use_many_body = False
 number_for_N_body = 3
 
 
 
-
-writeingFreq = 100
+writeingFreq = 1
 
 if (float(steps*simulationTime)/writeingFreq - steps*simulationTime/writeingFreq) != 0.0:
     print "change writeingFreq"
     sys.exit()
 
 
-
+time = np.linspace(0,simulationTime,int(steps*simulationTime/writeingFreq))
 
 
 
@@ -49,13 +53,17 @@ if (not use_many_body and (number_for_N_body != system.numberOfPlanets)):
     periods = np.zeros(N+1)
     acceleration = np.zeros([2,N+1])
 
-    time = np.linspace(0,simulationTime,int(steps*simulationTime))
-    print time
+
 
     sunMass = system.starMass
     masses[N] = sunMass
+
+    b = 2900 # Wien's displacement constant in micrometers
+    sun_waveLenght = b/system.temperature
+
     print "mass: ", sunMass
     print "Temp: ",system.temperature
+    print "Wavelenght: ", sun_waveLenght
     print "Radius: ",system.starRadius
     print "___"
     print len(system.mass)
@@ -88,6 +96,17 @@ else:
 
     N = number_for_N_body
 
+    b = 2900 # Wien's displacement constant in micrometers
+    sun_waveLenght = b/system.temperature
+    sunMass = system.starMass
+
+    print "mass: ", sunMass
+    print "Temp: ",system.temperature
+    print "Wavelenght: ", sun_waveLenght
+    print "Radius: ",system.starRadius
+    print "___"
+    print len(system.mass)
+
 
     try:
         postions = np.zeros([2,N + 1,steps*simulationTime/writeingFreq]) #Number of datapoints, numb of planets and star, 2 coordinates
@@ -105,7 +124,7 @@ else:
     periods = np.zeros(N+1)
     acceleration = np.zeros([2,N+1])
 
-    sunMass = system.starMass
+
     masses[N] = sunMass
 
     index_biggest = np.argsort(complet_list_masses)
@@ -225,21 +244,40 @@ else:
         print (float(step)/(steps*simulationTime))*100, "%            \r",
     print ""
 
-#postions[:,:,-1] = temp_pos
 
-#system.checkPlanetPositions(postions,simulationTime,steps/writeingFreq)
+
+system.checkPlanetPositions(postions,simulationTime,steps/writeingFreq)
 #system.orbitXml(postions[:,:N,:],time)
+
+
+plt.xlabel("Position [AU]")
+plt.ylabel("Position [AU]")
+plt.axis("equal")
 for p in range(N):
     plt.plot(postions[0,p,-1],postions[1,p,-1],"o")
     plt.plot(postions[0,p,0],postions[1,p,0],"x")
     plt.plot(postions[0,p,:],postions[1,p,:])
 
 plt.plot(postions[0,N,-1],postions[1,N,-1],"y*")
-#plt.plot(postions[0,p,0],postions[0,p,1],"x")
+
 plt.plot(postions[0,N,:],postions[1,N,:])
 
 plt.show()
-plt.plot(sun_vel[0])
-plt.show()
-plt.plot(np.fft.ifft(sun_vel[0]))
-plt.show()
+if(save and not use_many_body):
+    outFilePos = open("filePositions.npy", "wb")
+    np.save(outFilePos, postions[:,:N,:])
+    outFilePos.close()
+if (use_many_body):
+    random_noice_vel = []
+    for i in sun_vel[0]:
+        random_noice_vel.append(i + np.random.normal(0,(1./5)*np.max(sun_vel[0])))
+    plt.xlabel("Time[years]")
+    plt.ylabel("Velocity [m/s]")
+    plt.plot(time,sun_vel[0]*AU_per_year_to_SI)
+    plt.show()
+    plt.xlabel("Time[years]")
+    plt.ylabel("Velocity [m/s]")
+    plt.plot(time,np.array(random_noice_vel)*AU_per_year_to_SI)
+    plt.show()
+    # plt.plot(np.fft.ifft(sun_vel[0]))
+    # plt.show()
