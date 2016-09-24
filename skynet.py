@@ -40,28 +40,34 @@ class skynet:
         r_with_sun = np.zeros([2,self.numberOfPlanets + 1])
         r_with_sun[:,:-1] = r
         r_with_sun[:,-1] = sat_pos
-        return distances,r_with_sun
+        return distances
 
 
-    def find_position(self, guess, weight,distances, real_r, time):
+    def find_position(self, guess, weight,distances, time):
 
         x0 = guess[0]
         y0 = guess[1]
 
+        h = 1e-8
 
-
-        regression_steps = 1e4
+        regression_steps = 1e5
 
         for i in range(int(regression_steps)):
-            dist,r = self.find_distance_planets(guess,time)
+            dist= self.find_distance_planets(guess,time)
 
-            dx = (4./dist.size)*sum((r[0] - real_r[0]))
-            dy = (4./dist.size)*sum((r[1] - real_r[1]))
+            #dx = (4./dist.size)*sum((r[0] - real_r[0]))
+            #dy = (4./dist.size)*sum((r[1] - real_r[1]))
 
-            guess[0] += weight*dx
-            guess[1] += weight*dy
+            dx = (8./dist.size)*np.sum(dist[:-1]*(distances[:-1]-dist[:-1])*(self.planetPosFunction(time)[0,:]-guess[0]))
+            dy = (8./dist.size)*np.sum(dist[:-1]*(distances[:-1]-dist[:-1])*(self.planetPosFunction(time)[1,:]-guess[1]))
+
+
+            guess[0] -= weight*dx
+            guess[1] -= weight*dy
 
         return guess
+
+
 
 
 
@@ -76,8 +82,8 @@ class skynet:
             point = np.array([np.random.uniform(-50,50),np.random.uniform(-50,50)])
 
             guess =  np.array([np.random.uniform(-50,50),np.random.uniform(-50,50)])
-            dist, r = self.find_distance_planets(point,time)
-            guess = self.find_position(guess,0.01,dist,r,time)
+            dist = self.find_distance_planets(point,time)
+            guess = self.find_position(guess,0.00001,dist,time)
 
             if np.max(abs(guess-point)) < epsilon:
                 correct += 1
@@ -89,20 +95,20 @@ class skynet:
         print "Wrong: ",wrong
 
 
-    def get_image(self,phi_midpoint):
+    def make_image(self,phi_midpoint, name = ""):
 
 
+        folder = "pic/"
+        phi_midpoint = phi_midpoint*np.pi/180
         theta_midpoint = np.pi/2.
         ypix = 480
         xpix = 640
-        field_of_view = 70.
+        field_of_view = 1.22173#70.
         max_xy = (2*np.sin(field_of_view/2.))/(1+np.cos(field_of_view/2.))
 
         pic = np.zeros((ypix,xpix,3), dtype=np.uint8)
         x = np.linspace(-max_xy,max_xy,xpix)
         y = np.linspace(-max_xy,max_xy,ypix)
-
-        print x.size
 
 
         for i in xrange(xpix):
@@ -111,7 +117,7 @@ class skynet:
                 c = 2*np.arctan2(rho,2.)
 
 
-                theta = (np.pi/2) - np.arcsin(np.cos(c)*np.cos(theta_midpoint) + y[j]*np.sin(c)*np.sin(theta_midpoint)/rho)
+                theta = (np.pi/2.) - np.arcsin(np.cos(c)*np.cos(theta_midpoint) + y[j]*np.sin(c)*np.sin(theta_midpoint)/rho)
                 phi = phi_midpoint + np.arctan2(x[i]*np.sin(c),(rho*np.sin(theta_midpoint)*np.cos(c) - y[j]*np.cos(theta_midpoint)*np.sin(c)))
 
                 temp = self.himmelkule[self.system.ang2pix(theta,phi)]
@@ -120,14 +126,129 @@ class skynet:
 
                 pic[j,i,:] = rbg
 
-        img = Image.fromarray(pic)
-
-        img.save("star.png")
 
 
+        if name != "":
+            img = Image.fromarray(pic)
+            img.save(folder + name + ".png")
+            return
+
+        return pic
+
+
+    def make_sky(self):
+        phi = 0
+        ypix = 480
+        xpix = 640
+
+        degrees = 360
+
+        sky = np.zeros((degrees,ypix,xpix,3), dtype=np.uint8)
+
+        for i in range(degrees):
+            #name = "degree" + str(i)
+            sky[i,:,:,:] = self.make_image(i)
+
+            print i
+
+
+        np.save("sky.npy",sky)
+
+
+    def find_angle(self,pic):
+        with open("sky.npy", "rb") as infile:
+            sky = np.load(infile)
+
+
+        degrees = 360
+
+        least_error = 10000
+        least_error_deg = 0
+
+        for i in range(degrees):
+
+            pic_from_file = sky[i,:,:,:]
+
+            error = norm(pic_from_file-pic)
+
+            if (error < least_error):
+                least_error = error
+                least_error_deg = i
+
+
+        return least_error_deg
 
 
 
+    def test_find_angle(self,number_of_tests = 1):
+
+        correct = 0
+        wrong = 0
+
+        for i in range(number_of_tests):
+            test_deg = int(np.random.uniform(0,359))
+
+            pic = self.make_image(test_deg)
+
+            calculated_deg = self.find_angle(pic)
+
+            if (calculated_deg == test_deg):
+                correct += 1
+            else:
+                wrong += 1
+
+
+        print "Correct: ",correct
+        print "Wrong: ",wrong
+
+
+    def find_velocity(self,lambda1,lambda2):
+        c = 63239.7263
+        h_alpha = 656.3
+
+        star1_phi = 77.518724
+        star1_shift = -0.017002884383
+        star1_v = (star1_shift/h_alpha)*c
+
+        star2_phi = 325.121916
+        star2_shift = 0.017144686369
+        star2_v = (star2_shift/h_alpha)*c
+
+
+        v1 = (star1_v - (lambda1/h_alpha)*c)
+        v2 = (star2_v - (lambda2/h_alpha)*c)
+
+        div_factor = 1.0/np.sin(star2_phi-star1_phi)
+
+        vx = div_factor*(np.sin(star2_phi)*v1 - np.sin(star1_phi)*v2)
+        vy = div_factor*(-np.cos(star2_phi)*v1 + np.cos(star1_phi)*v2)
+
+        return vx,vy
+
+
+    def test_find_velocity(self):
+
+
+        phi1 = 77.518724
+        phi2 = 325.121916
+        vs_1 = -1.63836317948
+        vs_2 = 1.65202692896
+        eps = 1e-6
+
+
+
+
+        vtx,vty = self.find_velocity(-0.017002884383, 0.017144686369)
+
+
+        vx,vy = self.find_velocity(0.0, 0.0)
+        v1 = np.cos(phi1)*vx + np.sin(phi1)*vy
+        v2 = np.cos(phi2)*vx + np.sin(phi2)*vy
+
+
+        success = (abs(vtx - 0.0) < eps and abs(vtx - 0.0)<eps) and (abs(v1 - vs_1) < eps and abs(v2 - vs_2) <eps)
+
+        assert success, "There is something wrong with the velocity finder"
 
 
 
@@ -143,7 +264,10 @@ class skynet:
 
 
 skynet = skynet()
-#dist, r =  skynet.find_distance_planets(np.array([-1.2,0.8]),2)
-#skynet.find_position(np.array([0.0001,-0.0001]), 0.01,dist,r,2)
-#skynet.test_dist(5)
-skynet.get_image(43.5)
+#dist =  skynet.find_distance_planets(np.array([1.2,100.8]),2)
+#print skynet.find_position(np.array([-1.0001,1.0001]), 0.000001,dist,2)
+#skynet.test_dist(10)
+#skynet.test_find_angle(5)
+skynet.test_find_velocity()
+
+#skynet.get_image(43.5)
