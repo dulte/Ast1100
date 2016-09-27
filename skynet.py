@@ -55,8 +55,6 @@ class skynet:
         for i in range(int(regression_steps)):
             dist= self.find_distance_planets(guess,time)
 
-            #dx = (4./dist.size)*sum((r[0] - real_r[0]))
-            #dy = (4./dist.size)*sum((r[1] - real_r[1]))
 
             dx = (8./dist.size)*np.sum(dist[:-1]*(distances[:-1]-dist[:-1])*(self.planetPosFunction(time)[0,:]-guess[0]))
             dy = (8./dist.size)*np.sum(dist[:-1]*(distances[:-1]-dist[:-1])*(self.planetPosFunction(time)[1,:]-guess[1]))
@@ -162,14 +160,14 @@ class skynet:
 
         degrees = 360
 
-        least_error = 10000
+        least_error = 1e7
         least_error_deg = 0
 
         for i in range(degrees):
 
             pic_from_file = sky[i,:,:,:]
 
-            error = norm(pic_from_file-pic)
+            error = np.sum((pic_from_file-pic)**2)
 
             if (error < least_error):
                 least_error = error
@@ -185,14 +183,16 @@ class skynet:
         correct = 0
         wrong = 0
 
+        eps = 1
+
         for i in range(number_of_tests):
-            test_deg = int(np.random.uniform(0,359))
+            test_deg = (np.random.uniform(0,359))
 
             pic = self.make_image(test_deg)
 
             calculated_deg = self.find_angle(pic)
 
-            if (calculated_deg == test_deg):
+            if (abs(calculated_deg - test_deg) < eps):
                 correct += 1
             else:
                 wrong += 1
@@ -252,6 +252,17 @@ class skynet:
 
 
 
+    def give_orientation(self,lambda1, lambda2, picname,dist,time):
+
+        pos = self.find_position([1,1],0.00001,dist,time)
+        vel = self.find_velocity(lambda1,lambda2)
+        pic = np.load(picname)
+        angle = self.find_angle(pic)
+
+
+        print "Position: ",pos
+        print "Velocity: ",vel
+        print "Angle: ",angle
 
 
 
@@ -266,8 +277,8 @@ class skynet:
 skynet = skynet()
 #dist =  skynet.find_distance_planets(np.array([1.2,100.8]),2)
 #print skynet.find_position(np.array([-1.0001,1.0001]), 0.000001,dist,2)
-#skynet.test_dist(10)
+skynet.test_dist(10)
 #skynet.test_find_angle(5)
-skynet.test_find_velocity()
+#skynet.test_find_velocity()
 
 #skynet.get_image(43.5)
