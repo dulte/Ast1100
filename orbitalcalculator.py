@@ -64,38 +64,73 @@ print steps
 
 planetPosFunction = inter.interp1d(t, planetPositions)
 
-pos = np.array([0.80253929065 , 4.16457524661])
-time = 8.81981666666
+# pos = np.array([0.80253929065 , 4.16457524661])
+# time = 8.81981666666
+#
+# print calc_r(pos,time,planetPosFunction)
+# print calc_r_vec(pos,time,planetPosFunction)
+# print calc_correction_burn(pos,time,planetPosFunction)
+# print norm(calc_correction_burn(pos,time,planetPosFunction))
+#
+#
+#
+# pos2 = np.array([0.792907737234 , 4.16748703398])
+# time2 = 8.82231666666
+#
+# print "-----"
+# print calc_r_vec(pos2,time2,planetPosFunction)
+# print "When burning: ",calc_r(pos2,time2,planetPosFunction)
+# print "-----"
+#
+# vel_inj = np.array([-3.77504600841 , 1.09819863799])
+# pos_inj = np.array([0.792907737234 , 4.16748703398])
+# time_inj = 8.82231666666
+#
+# planet_vel = calc_planet_vel(time,planetPosFunction)
+# p_mass = sys.mass[1]
+#
+#
+# print "injection burn: " ,calc_injection_burn(time_inj,planetPosFunction,pos_inj,planet_vel,vel_inj,p_mass)
+# #print norm(calc_injection_burn(time_inj,planetPosFunction,pos_inj,planet_vel,vel_inj,p_mass))
+# print "-----"
+#
+# time = 10.82231666666
+# pos = np.array([-4.1747684284 ,  -1.02819079768])
+#
+# print "After 2 years: ",calc_r(pos,time,planetPosFunction)
+# print_theta(planetPosFunction,pos,time)
+
+
+pos = np.array([0.850583057699 , 4.15384934247])
+time = 8.80881666666
 
 print calc_r(pos,time,planetPosFunction)
-print calc_r_vec(pos,time,planetPosFunction)
 print calc_correction_burn(pos,time,planetPosFunction)
 print norm(calc_correction_burn(pos,time,planetPosFunction))
+print "--------"
+
+pos = np.array([0.833365798449 , 4.15916091718])
+time = 8.81281666666
+
+print calc_r(pos,time,planetPosFunction)
+print "------"
 
 
-
-pos2 = np.array([0.792907737234 , 4.16748703398])
-time2 = 8.82231666666
-
-print "-----"
-print calc_r_vec(pos2,time2,planetPosFunction)
-print "When burning: ",calc_r(pos2,time2,planetPosFunction)
-print "-----"
-
-vel_inj = np.array([-3.77504600841 , 1.09819863799])
-pos_inj = np.array([0.792907737234 , 4.16748703398])
-time_inj = 8.82231666666
+vel_inj = np.array([-4.33874216505 , 1.33664064517])
+pos_inj = np.array([0.833361459735 , 4.15916225383])
+time_inj = 8.81281666666
 
 planet_vel = calc_planet_vel(time,planetPosFunction)
 p_mass = sys.mass[1]
 
 
 print "injection burn: " ,calc_injection_burn(time_inj,planetPosFunction,pos_inj,planet_vel,vel_inj,p_mass)
-#print norm(calc_injection_burn(time_inj,planetPosFunction,pos_inj,planet_vel,vel_inj,p_mass))
+print norm(calc_injection_burn(time_inj,planetPosFunction,pos_inj,planet_vel,vel_inj,p_mass))
 print "-----"
 
-time = 10.82231666666
-pos = np.array([-4.1747684284 ,  -1.02819079768])
+
+time = 10.81281666666
+pos = np.array([-4.18412274402 , -0.989071568075])
 
 print "After 2 years: ",calc_r(pos,time,planetPosFunction)
 print_theta(planetPosFunction,pos,time)
