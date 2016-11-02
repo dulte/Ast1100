@@ -32,8 +32,16 @@ class orbit:
         self.tempStar = sys.temperature
         self.tempPlanet = np.sqrt(sys.starRadius*self.km_to_au/(2.0*sys.a[planetID]))*self.tempStar
         self.rho = sys.rho0[planetID]
+        self.omega = sys.period[1]*24*3600
+        self.omega_vec = np.array([0,0,self.omega])
+
         self.laucherArea = 6
+
+        self.currentTime = 0
+        self.currentPos = self.x0
+        self.currentVel = self.v0
         self.landerMass = 90
+
 
 
 
@@ -113,27 +121,26 @@ class orbit:
 
 
     def a(self,x,v):
-        return -self.G*self.mass/(norm(x)**3)*x - 0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*norm(v)*v*self.laucherArea/1100.
+        return -self.G*self.mass/(norm(x)**3)*x - 0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*(norm(v))*(v)*self.laucherArea/self.laucherMass
+#0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*(norm(v-np.cross(self.omega_vec,x)))*(v-np.cross(self.omega_vec,x))*self.laucherArea/self.laucherMass
 
-    def simOrbit(self,time,finalR,startTime):
+    def simOrbit(self,time,finalR):
         dt = 1e-1
 
         pos_temp = np.zeros(3)
-        pos_temp = self.x0
+        pos_temp = self.currentPos
         writingFreq = 1000.0
 
-        pos = np.zeros((int(time/(writingFreq*dt)),3))
-        pos[0,:] = self.x0
 
-        #t = np.zeros(int(time/(writingFreq*dt)))
 
         vel = np.zeros(3)
-        vel = self.v0
+        vel = self.currentVel
         firstCirc = self.circle(pos_temp,vel)
         vel += firstCirc#self.circle(pos_temp,vel)
 
         hight = finalR #4000000
-        dv1,timeBurn = self.hohmann1(norm(self.x0),hight,self.v0)
+        dv1,timeBurn = self.hohmann1(norm(self.currentPos),hight,self.currentVel)
+        startTime = self.currentTime
 
         totalFirstBoost = dv1 + firstCirc
         print "Safe Hight: ",hight
@@ -143,7 +150,7 @@ class orbit:
 
         vel += dv1
 
-        vel += 0.5*self.a(pos[0,:],vel)*dt
+        vel += 0.5*self.a(pos_temp,vel)*dt
         for i in range(1,int(time/dt)):
 
             pos_temp += vel*dt
@@ -152,13 +159,15 @@ class orbit:
 
             if i*dt >= timeBurn and not hohmann2Burned:
                 print "Sirukerer"
-                vel -= 0.5*self.a(pos[0,:],vel)*dt
+                vel -= 0.5*self.a(pos_temp,vel)*dt
                 circBurn = self.circle(pos_temp,vel)
-                vel += circBurn#self.circle(pos_temp,vel)#self.hohmann2(pos_temp,3000000,vel)
-                print "Sirkulerings burn:",circBurn
-                #vel = self.orbVel(norm(pos_temp))*vel/norm(vel)
+                vel += circBurn
                 hohmann2Burned = True
-                vel += 0.5*self.a(pos[0,:],vel)*dt
+                self.currentTime = i*dt + startTime
+                self.currentPos = pos_temp
+                self.currentVel = vel
+
+                break
 
 
             if norm(pos_temp) < self.sys.radius[1]*1000:
@@ -167,40 +176,19 @@ class orbit:
 
 
             if i%writingFreq == 0:
-                pos[int(i/writingFreq),:] = pos_temp
-                #print "At radius: ",norm(pos_temp) - self.sys.radius[1]*1000
-
                 print (float(i)/int(time/(dt)))*100, "%            \r",
+
+        else:
+            print "Did not reach circulaization"
+            exit(1)
         print ""
 
 
-        print "Final r[km]: ", (norm(pos[-1,:]))/1000. - self.sys.radius[1]
-        # fig = plt.figure()
-        # ax = fig.gca(projection = "3d")
-        # # ax.plot(pos[:,0],pos[:,1],pos[:,2])
-        # # plt.title("Orbit")
-        # # plt.xlabel("x")
-        # # plt.ylabel("y")
-        # # plt.show()
-        #
-        # ax = fig.gca(projection='3d')
-        # phi = np.linspace(0, 2 * np.pi, 100)
-        # theta = np.linspace(0, np.pi, 100)
-        # xm = self.sys.radius[1]*1000 * np.outer(np.cos(phi), np.sin(theta))
-        # ym = self.sys.radius[1]*1000 * np.outer(np.sin(phi), np.sin(theta))
-        # zm = self.sys.radius[1]*1000 * np.outer(np.ones(np.size(phi)), np.cos(theta))
-        #
-        #
-        # ax.plot_surface(xm, ym, zm)
+
+        #print "Final r[km]: ", (norm(pos[-1,:]))/1000. - self.sys.radius[1]
 
 
-        #ax.plot(pos[:,0],pos[:,1],pos[:,2])
-        plt.plot(pos[:,0],pos[:,1])
-        #plt.gca().set_aspect('equal', adjustable='box')
-        #plt.axis("equal")
-        plt.show()
-
-        print "Copy to instuctions: "
+        print "Copy to instuctions for hohmann to %g km: " %((norm(self.currentPos))/1000. - self.sys.radius[1])
         print "----------"
         print "boost %g %g %g %g" %(startTime + 0.001, totalFirstBoost[0],totalFirstBoost[1],totalFirstBoost[2])
         print "boost %g %g %g %g" %(timeBurn, circBurn[0],circBurn[1],circBurn[2])
@@ -209,11 +197,91 @@ class orbit:
 
     def parachuteSize(self):
         v_safe = 3
-
         return 2*self.G*self.landerMass*self.mass/((self.sys.radius[1]*1000)**2*self.rho*v_safe**2)
 
-    def landingSim(self,r,theta,v_theta):
-        pass
+    def landingSim(self,r,theta,deployHight):
+
+        time = 50000
+        dt = 1e-2
+        paraDeployed = False
+        deployTime = 0
+
+        writingFreq = 10000
+
+
+
+        self.laucherMass = self.landerMass
+        self.laucherArea = 0.3
+
+        pos = (self.currentPos)
+        print (norm(pos) - self.sys.radius[1]*1000)/1000
+
+        vel = (self.currentVel)
+
+
+        pos_save = np.zeros((int(time/(writingFreq*dt)),3))
+        pos_save[0,:] = self.x0
+
+        radiusWhenInAtmos = norm(pos) - 500*1000
+
+
+        dv,burnTime = self.hohmann1(norm(pos),radiusWhenInAtmos,self.currentVel)
+
+        landerReleaseVel = dv
+
+        vel += dv
+
+
+        vel += 0.5*self.a(pos,vel)*dt
+
+
+
+        for i in range(1,int(time/dt)):
+
+            r_vel = np.dot(vel,pos/norm(pos))
+
+            pos += vel*dt
+            vel += self.a(pos,vel)*dt
+
+            if i%writingFreq == 0:
+                print "Time: ",self.currentTime + i*dt
+                print "Dist planet [km]: ", (norm(pos) - self.sys.radius[1]*1000)/1000
+                print "Radial vel: ", r_vel
+
+                print "-----"
+
+                pos_save[int(i/writingFreq),:] = pos
+
+
+            if norm(pos) < (deployHight+self.sys.radius[1]*1000.) and not paraDeployed:
+                print "Deploying!"
+                self.laucherArea += self.parachuteSize()
+                deployTime = self.currentTime + i*dt
+                paraDeployed = True
+
+            if norm(pos) < self.sys.radius[1]*1000:
+                if abs(r_vel) > 3.2:
+                    print "Crash"
+                    break
+                else:
+                    print "You landed at time %g with velocity %g" %(self.currentTime + i*dt,r_vel)
+                    timeLanded = self.currentTime + i*dt
+                    break
+
+
+        print "parachuteSize: ", self.parachuteSize()
+        print "Copy to instruction for landing:"
+        print "-------"
+        print "launchLander %g %g %g %g" %(self.currentTime + 0.1,landerReleaseVel[0],landerReleaseVel[1],landerReleaseVel[2])
+        print "parachute %g %g" %(deployTime,self.parachuteSize())
+        print "landing %g %g %g" %(timeLanded + 1000,0,0)
+
+
+        print "-----"
+
+        plt.plot(pos_save[:,0],pos_save[:,1])
+        plt.show()
+
 
 
 
@@ -240,14 +308,5 @@ hight = orb.findSafeHeight() + orb.sys.radius[1]*1000.
 newHight = hight/8.0
 print "Planet radius: ", orb.sys.radius[1]
 
-#orb.findSafeHeight()
-#h = np.linspace(0,210818,1000001)
-# plt.plot(h,orb.adiabaticDensity(h))
-# plt.show()
-# plt.plot(h,orb.atmosDensity(h))
-# plt.show()
-#orb.simOrbit(160000,hight,0)
-#orb.simOrbit(80000,newHight,startTime)
-#print norm(np.array([2037990.98306102,  2053420.61273033]))
-print orb.parachuteSize()
-#orb.lauch()
+orb.simOrbit(160000,hight)
+orb.landingSim(0,0,50*1000)
