@@ -19,11 +19,13 @@ class orbit:
         planetID = 1
         self.filename = filename
         self.mu = 31.01404
+        #self.mu = 31.428571
+
         self.solar_to_kg = 1.988435e30
         self.km_to_au = 6.685e-9
         self.mh = 1.660539040e-27
         self.k = 1.38064852e-23
-        self.G = 6.674e-11
+        self.G = 6.67408e-11
         self.g = self.G*sys.mass[planetID]*self.solar_to_kg/(sys.radius[planetID]*1000)**2
         self.laucherMass = 1100.0
 
@@ -32,7 +34,9 @@ class orbit:
         self.tempStar = sys.temperature
         self.tempPlanet = np.sqrt(sys.starRadius*self.km_to_au/(2.0*sys.a[planetID]))*self.tempStar
         self.rho = sys.rho0[planetID]
-        self.omega = sys.period[1]*24*3600
+        self.omega = 1.0/(sys.period[1]) * 7.272e-5
+        #self.omega = sys.period[1]
+
         self.omega_vec = np.array([0,0,self.omega])
 
         self.laucherArea = 6
@@ -42,13 +46,16 @@ class orbit:
         self.currentVel = self.v0
         self.landerMass = 90
 
+        self.commands = ["init"]
+
 
 
 
         self.mass = sys.mass[planetID]*self.solar_to_kg
 
 
-
+        print "Rotatinal Period: ",sys.period[1]
+        print "Omega: ",self.omega
         print "temp: ",self.tempPlanet
         print "mass: ",self.mass
         print "rho0: ",self.rho
@@ -121,20 +128,27 @@ class orbit:
 
 
     def a(self,x,v):
-        return -self.G*self.mass/(norm(x)**3)*x - 0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*(norm(v))*(v)*self.laucherArea/self.laucherMass
+        #return -self.G*self.mass/(norm(x)**3)*x - 0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*(norm(v))*(v)*self.laucherArea/self.laucherMass
+
+        # if norm(x) - self.sys.radius[1]*1000 > 400000:
+        #     return -self.G*self.mass/(norm(x)**3)*x
+        # else:
+
+        return -self.G*self.mass/(norm(x)**3)*x - 0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*(norm(v-np.cross(self.omega_vec,x)))*(v-np.cross(self.omega_vec,x))*self.laucherArea/self.laucherMass
+
 #0.5*self.atmosDensity(norm(x)-self.sys.radius[1]*1000)*(norm(v-np.cross(self.omega_vec,x)))*(v-np.cross(self.omega_vec,x))*self.laucherArea/self.laucherMass
 
     def simOrbit(self,time,finalR):
         dt = 1e-1
 
         pos_temp = np.zeros(3)
-        pos_temp = self.currentPos
+        pos_temp = (self.currentPos[:])
         writingFreq = 1000.0
 
 
 
         vel = np.zeros(3)
-        vel = self.currentVel
+        vel = (self.currentVel[:])
         firstCirc = self.circle(pos_temp,vel)
         vel += firstCirc#self.circle(pos_temp,vel)
 
@@ -187,19 +201,27 @@ class orbit:
 
         #print "Final r[km]: ", (norm(pos[-1,:]))/1000. - self.sys.radius[1]
 
-
+        print "position when circulating: ", self.currentPos
         print "Copy to instuctions for hohmann to %g km: " %((norm(self.currentPos))/1000. - self.sys.radius[1])
         print "----------"
         print "boost %g %g %g %g" %(startTime + 0.001, totalFirstBoost[0],totalFirstBoost[1],totalFirstBoost[2])
         print "boost %g %g %g %g" %(timeBurn, circBurn[0],circBurn[1],circBurn[2])
         print "----------"
+        self.commands.append("boost %g %g %g %g" %(startTime + 0.001, totalFirstBoost[0],totalFirstBoost[1],totalFirstBoost[2]))
+        self.commands.append("boost %g %g %g %g" %(timeBurn, circBurn[0],circBurn[1],circBurn[2]))
 
 
     def parachuteSize(self):
         v_safe = 3
         return 2*self.G*self.landerMass*self.mass/((self.sys.radius[1]*1000)**2*self.rho*v_safe**2)
 
-    def landingSim(self,r,theta,deployHight):
+    def landingSim(self,phi,deployHight):
+
+
+        deceantToAtmos = 290*1000#223*1000
+
+
+        #self.findTimeToLand(phi,norm(self.currentPos) - deceantToAtmos,False)
 
         time = 50000
         dt = 1e-2
@@ -220,12 +242,14 @@ class orbit:
 
 
         pos_save = np.zeros((int(time/(writingFreq*dt)),3))
-        pos_save[0,:] = self.x0
+        pos_save[0,:] = pos
 
-        radiusWhenInAtmos = norm(pos) - 500*1000
+        radiusWhenInAtmos = norm(pos) - deceantToAtmos
 
 
         dv,burnTime = self.hohmann1(norm(pos),radiusWhenInAtmos,self.currentVel)
+
+        dv += self.circle(self.currentPos,self.currentVel)
 
         landerReleaseVel = dv
 
@@ -236,7 +260,7 @@ class orbit:
 
 
 
-        for i in range(1,int(time/dt)):
+        for i in xrange(1,int(time/dt)):
 
             r_vel = np.dot(vel,pos/norm(pos))
 
@@ -266,10 +290,19 @@ class orbit:
                 else:
                     print "You landed at time %g with velocity %g" %(self.currentTime + i*dt,r_vel)
                     timeLanded = self.currentTime + i*dt
+
                     break
 
 
+        posAngle = np.arctan2(pos[1],pos[0])
+        if posAngle < 0:
+            posAngle += 2*np.pi
+
         print "parachuteSize: ", self.parachuteSize()
+        #print "Landing Angle: ", np.rad2deg(self.periodicAngle(posAngle + self.periodicAngle(1.0/(self.sys.period[1])*self.currentTime/(3600*24.)*2*np.pi)))
+        print "Landing Angle: ", np.rad2deg(self.periodicAngle(posAngle - self.getPlanetAngle(timeLanded) ))
+        print "Landing Angle in Rad: ", self.periodicAngle(posAngle - self.getPlanetAngle(timeLanded) )
+        print "At position: ", pos
         print "Copy to instruction for landing:"
         print "-------"
         print "launchLander %g %g %g %g" %(self.currentTime + 0.1,landerReleaseVel[0],landerReleaseVel[1],landerReleaseVel[2])
@@ -279,8 +312,207 @@ class orbit:
 
         print "-----"
 
+        self.commands.append("launchLander %g %g %g %g" %(self.currentTime + 0.1,landerReleaseVel[0],landerReleaseVel[1],landerReleaseVel[2]))
+        self.commands.append("parachute %g %g" %(deployTime,self.parachuteSize()))
+        self.commands.append("landing %g %g %g" %(timeLanded + 1000,0,0))
         plt.plot(pos_save[:,0],pos_save[:,1])
+        plt.axis("equal")
         plt.show()
+
+
+
+    def findTimeToLand(self,phi,higthForAtmos,globalCoord = False):
+
+
+        dt = 1e-1
+        timeForChecking = 1e6
+
+        satOmega = norm(self.currentVel)/norm(self.currentPos)
+
+
+
+        pos = (self.currentPos)
+
+        angleShift = 5.61242117994
+        startAngleSat = np.arctan2(pos[1],pos[0])
+        if startAngleSat < 0:
+            startAngleSat += 2*np.pi
+
+        eps = 1e-3
+
+
+        vel = (self.currentVel)
+
+        vel += 0.5*self.a(pos,vel)*dt
+
+        for i in xrange(1,int(timeForChecking/dt)):
+
+            pos += vel*dt
+            vel += self.a(pos,vel)*dt
+
+            satPhi = np.arctan2(pos[1],pos[0])
+            if satPhi < 0:
+                satPhi += 2*np.pi
+
+            landAngle = self.periodicAngle(angleShift + self.getPlanetAngle(i*dt) + satPhi)
+
+            #satPhi = self.periodicAngle(satPhi - self.getPlanetAngle(self.currentTime + i*dt))
+            #planetPhi = self.periodicAngle(phiToFind +self.getPlanetAngle(self.currentTime + i*dt))
+            #print planetPhi
+
+            if abs(landAngle - phi) < eps :
+                print "Found correct Angle"
+                #print "Sat: ",satPhi
+                #print "planet: ",planetPhi
+                self.currentPos = pos
+                self.currentVel = vel
+                self.currentTime += i*dt
+                break
+
+        else:
+            print "No angle for landing found"
+            exit()
+        #
+        #
+        # dv,burnTime = self.hohmann1(norm(self.currentPos),higthForAtmos,self.currentVel)
+        # hardCodedTime = 15136
+        # satOmega = norm(self.currentVel)/norm(self.currentPos)
+        #
+        # dt = 1e-1
+        # timeForChecking = 1e6
+        #
+        # if globalCoord:
+        #     phiToFind = np.arccos(np.cos(phi + self.omega*(self.currentTime+burnTime)))
+        # else:
+        #     phiToFind = phi# - np.pi# np.arcsin(np.sin(phi - np.arcsin(np.sin(self.omega*burnTime))))
+        #
+        #
+        # eps = 1e-3
+        # satPhi = np.arctan2(self.currentPos[1],self.currentPos[0])
+        # print "Burn Time: ", burnTime
+        #
+        # angleBetween = np.pi-self.omega*(burnTime)#-5000)
+        #
+        #
+        # #planetPhi = self.periodicAngle(phiToFind + self.omega*(self.currentTime + hardCodedTime) )#np.pi +(np.arcsin(np.sin(self.omega*(self.currentTime+ burnTime))))))
+        # #planetPhi = phiToFind - self.getPlanetAngle(self.currentTime)
+        #
+        # pos = (self.currentPos)
+        #
+        #
+        # vel = (self.currentVel)
+        #
+        # vel += 0.5*self.a(pos,vel)*dt
+        #
+        # for i in xrange(1,int(timeForChecking/dt)):
+        #
+        #     pos += vel*dt
+        #     vel += self.a(pos,vel)*dt
+        #
+        #     # planetPhi += self.omega*dt
+        #     # if planetPhi > np.pi:
+        #     #     planetPhi = -np.pi
+        #
+        #
+        #     satPhi = np.arctan2(pos[1],pos[0])
+        #     if satPhi < 0:
+        #         satPhi += 2*np.pi
+        #
+        #     #satPhi = self.periodicAngle(satPhi - self.getPlanetAngle(self.currentTime + i*dt))
+        #     planetPhi = self.periodicAngle(phiToFind +self.getPlanetAngle(self.currentTime + i*dt))
+        #     #print planetPhi
+        #
+        #     if abs((satPhi - planetPhi)-angleBetween) < eps :
+        #         print "Found correct Angle"
+        #         print "Sat: ",satPhi
+        #         print "planet: ",planetPhi
+        #         self.currentPos = pos
+        #         self.currentVel = vel
+        #         self.currentTime += i*dt
+        #         break
+        #
+        # else:
+        #     print "No angle for landing found"
+        #     exit()
+
+
+    def wait(self,time, photos = 1):
+
+        photoStep = abs(int(self.currentTime) - int(self.currentTime + time))/float(photos)
+        photoTime = [int(i) for i in range(int(self.currentTime), int(self.currentTime + time), int(photoStep))]
+
+        dt = 1e-1
+
+        self.laucherMass = self.landerMass
+        self.laucherArea = 0.3
+
+        pos = (self.currentPos)
+
+
+        vel = (self.currentVel)
+
+        vel += 0.5*self.a(pos,vel)*dt
+
+        for i in xrange(1,int(time/dt)):
+
+            pos += vel*dt
+            vel += self.a(pos,vel)*dt
+
+            if int(self.currentTime + dt*i)-1 in photoTime:
+                photoTime.pop(photoTime.index(int(self.currentTime + dt*i)-1))
+                phi,theta = self.photoAngle(pos)
+                self.commands.append("picture %g %g %g 0 0 1" %(self.currentTime + dt*i,theta,phi))
+        else:
+
+            print "Wait done"
+            self.currentPos = pos
+            self.currentVel = vel
+            self.currentTime += time
+
+
+
+    def dumpCommands(self):
+        print "Command File:"
+        print "........"
+        for command in self.commands:
+            print command
+
+        print "........"
+
+
+    def periodicAngle(self,angle):
+        return angle%(2*np.pi)#angle - np.floor(angle/(2*np.pi))*(2*np.pi)
+
+
+    def startAt(self,time,pos,vel):
+        self.currentTime = time
+        self.currentPos = pos
+        self.currentVel = vel
+
+    def getPlanetAngle(self,time):
+
+        rot = 1.0/(self.sys.period[1])*time/(3600*24.)
+
+        if rot > 1.0:
+            rot -= np.floor(rot)
+        return rot*2*np.pi
+
+    def photoAngle(self,position):
+        pos = -1*position
+        phi = np.arctan2(pos[1],pos[0])
+        theta = np.arccos(pos[2]/float(norm(pos)))
+        # if phi < 0:
+        #     phi+=2*np.pi
+        return phi,theta
+
+    def forceCircle(self):
+        gravPara = self.mass*self.G
+        burn = self.orbVel(norm(self.currentPos))
+        theta = np.arctan2(self.currentPos[1],self.currentPos[0])
+        v_unit = np.array([-np.sin(theta),np.cos(theta),0])
+        burn_vec = burn*v_unit - self.currentVel
+        self.commands.append("boost %g %g %g %g" %((self.currentTime+0.1),burn_vec[0],burn_vec[1],burn_vec[2]))
+        self.currentVel = burn*v_unit
 
 
 
@@ -294,9 +526,10 @@ startPos = (np.array([ 50046912.943 ,  1922577.0044 ,  0]))
 startV = np.array([-43.5115671208 ,  667.405339613 ,  0])
 
 
-newPos = (np.array([ 1118641.33046991, -6317229.93852847,0.]))
-newVel = (np.array([ 1994.27139912,  -422.71705031 ,0.]))
-startTime = 90462
+newPos = (np.array([ -3052138.88186312 , -171563.79559976  ,      0.    ]))
+#newPos = (np.array([ -3055347.96016123,  -117503.75662316 ,       0.    ]))
+newVel = (np.array([  139.68983011, -2717.64551774 ,    0.    ]))
+startTime = 90460.01
 
 
 filename = "landing.txt"
@@ -309,4 +542,12 @@ newHight = hight/8.0
 print "Planet radius: ", orb.sys.radius[1]
 
 orb.simOrbit(160000,hight)
-orb.landingSim(0,0,50*1000)
+
+targetAngel = 150.568139548
+
+orb.startAt(startTime,newPos,newVel)
+orb.forceCircle()
+orb.wait(4010,1)
+#orb.wait(20000,20)
+orb.landingSim(np.pi/3,50*1000)
+orb.dumpCommands()
