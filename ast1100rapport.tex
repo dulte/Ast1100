@@ -21,6 +21,7 @@
 \usepackage[noabbrev]{cleveref}
 \usepackage{cite}
 \usepackage[most]{tcolorbox}
+\usepackage{subcaption}
 
 
 \setlength{\droptitle}{-10em}   % This is your set screw
@@ -59,7 +60,12 @@ $n_b$ & Number of boxes.\\
 $m_l$ & Mass of the satellite. \\
 $m_f$ & Mass of the fuel.\\
 $m_e$ & Mass of the particles escaping per second per box. \\
+$M_s$ & Mass of the star.\\
 $m_{f0}$ & Mass of fuel when launching. \\
+$T_*$ & Temperature of the Star\\
+$T_p$ & Temperature of the destination planet. \\
+$r_p$ & Radius of the destination planet. \\
+$R_p$ & Distance from sun to destination planet. \\
 \end{tabular}
 \end{center}
 
@@ -159,6 +165,245 @@ m_{f0} = m_l(e^{\frac{\Delta v m_e}{F_b}} - 1)
 
 We are going to check if this equation gives us the correct amount of fuel.
 
+\subsection{Simulation of out Solar System}
+\subsubsection{2-body problem}
+To get sufficiently accurate information about our solar system during the our trip, we want to simulate it for about 20 years. We are only interested in the 2-body problem exerted between one planet and the sun. And we are only going to look at solar system as flat system, laying in the xy-plain. So to describe the motion of the planets we use Newtonian gravity:
+
+\begin{align}
+\textbf{F}_\textbf{G} = -\frac{Gm_p M_s}{r^{3}}\textbf{r}
+\end{align}
+
+$m_p$ being the mass of the/a planet. This force will be exerted both on the planet and the sun, but since we want a stationary star, the force will only be exerted from the sun to the planet. Applying Newtons second law, we get the differential equation:
+
+$$
+\bold{a} = \frac{d^{2}\textbf{r}}{dt^{2}}  = -\frac{G M_s}{r^{3}}\textbf{r}
+$$ 
+
+
+We want to solve this differential equation numerically. To do this, we are going to use the Leapfrog method \ref{sec:leap}. By knowing the initial position and velocity we can now find the position and velocity for the planets for out whole journey. 20 years were simulated with a time step $\Delta t = 1/20000.$\\
+
+We also want to you appropriate units. For all the simulations and calculations from now and until we are in orbit around Isskji we are going to use astronomical units, where distance are measured in an astronomical unit $1 AU = 1.496 \cdot 10^{11} m$ and mass in solar masses $1 M_{\odot} = 1.988435 \cdot 10^{30} kg$. To use Newton's equation as described over, we have to redefine the gravitational constant $G$: \\
+
+We are going to look at the earth-sun-system. For the earth to stay in a circular orbit, the gravitational force has to equal the centripetal force:
+
+\begin{equation}
+m_p(\omega)^{2}r = \frac{Gm_sm_p}{r^{2}}
+\end{equation}
+
+If we use that $\omega = \frac{2 \pi}{T}$, we'll get
+
+\begin{equation}
+\left( \frac{2 \pi}{1 year} \right)^{2} \dot {1 AU} = \frac{G \dot M_{\odot}}{1AU^{2}} 
+\end{equation}
+\begin{equation}
+G = 4 \pi^{2}[AU^{3} M_{\odot}^{-1} year^{-2}]
+\end{equation}
+
+\subsubsection{N-body problem}
+If we let all the planets interact with one another, we'll get the N-body problem. We are going to use the same numerical method as above \ref{sec:leap}, but the differential equation looks slightly different:
+
+\begin{align}
+\bold{a}_i = \frac{d^{2}\textbf{r}_i}{dt^{2}}  = -\sum_{i \neq j}\frac{G m_j}{r_{ij}^{3}}\textbf{r}_{ij}
+\end{align}
+
+where $a_i$ is the acceleration on planet $i$, and $\bold{r}_{ij}$ the distance from planet $i$ to $j$. We are going to treat the sun as just another planet. A consequence of this is that the center of mass won't lay in the origin. Not only that, but since the since the momentum of the center of mass is the sum of the momentum of the planets 
+
+\begin{equation}
+|M\dot{R}| = |\sum\limits_i m_{pi}v_{pi} + m_sv_s| > 0 
+\end{equation}
+
+we have to be careful to give the sun an initial velocity such that the momentum of the center of mass is equal to 0. To ensure this, we'll make the sun's momentum to be equal to that of other planets, but in the opposite direction:
+
+\begin{equation}
+\sum\limits_i m_{pi}v_{pi} = -m_sv_s
+\end{equation}
+
+Last we want to look at the motion of the sun. If some of the planets orbiting our sun are large enough, their gravitational pull on the sun would give it a large enough velocity, such at if there are observers looking at out solar system far away from a direction parallel to the x-axis, we will see red shift in the light from the sun when sun moves away from them, and a blue shift when it moves towards them, given by:
+
+\begin{equation}
+\Delta \lambda = \frac{v}{c}\lambda
+\end{equation}
+
+Given that these observers had sufficient technology to observe very small Doppler shifts, they could plot the speed over time, and deduce that sun. We are interested in making such a plot for our sun, and to see if these observers could conclude that out sun has planets orbiting, it they had the same technology available to them as we have. To make this plot more realistic, we are going to add some noise given by a Gaussian distribution with $\mu = 0$ and $\sigma = \frac{1}{5} max(v_s)$.\\
+
+The system was simulated with the 3 biggest planets -- the smaller planets will not have a noticeable effect compared with the biggest planets, and are to necessary to take in to account--. The simulation lasted 60 years with a time step $\Delta t = 1/20000$.
+
+\subsection{Information about planet}
+Before setting out on our journey, there are some things we want to know about where we are going. First is the size of solar panels we need to bring, second is the surface temperature and whether Isskji is inside the habitable zone.
+
+When we have landed on Isskji, we want the lander to be able to operate from the power it receives from it's solar panels. We therefor need to calculate the power due to the sun at Isskji's distance from the sun. Since 
+
+\begin{align}
+P = FA
+\end{align}
+
+We need to find the flux. Flux is given by
+
+\begin{align}
+F = \frac{L}{4\pi R^2}
+\end{align}
+
+Where $R$ is either the radius of the sun or the distance to the Isskji, dependent on whether we want to calculate $F_{in}$ or $F_{out}$.
+
+The flux leaving the sun is given by Stefan–Boltzmann law
+
+\begin{align*}
+F_{out} = \sigma T^4
+\end{align*}
+
+Meaning that we can rewrite the luminosity, with $R$ being the radius of the sun, as
+
+\begin{align}
+L = 4\pi R_*^2 \sigma T_*^4
+\end{align}
+
+We can now find the flux received at the distance of Isskji
+
+
+\begin{align}
+F_{in} = \frac{L}{4\pi R_p^2} = \frac{R_*^2}{R_p^2} \sigma T_*^4
+\end{align}
+
+Giving us the power
+\begin{align}
+P = A \cdot \frac{R_*^2}{R_p^2} \sigma T_*^4
+\end{align}
+
+We can thus calculate the area we need the solar panel to be
+
+\begin{align}
+A = P \cdot \frac{R_p^2}{R_*^2 \sigma T_*^4} 
+\end{align}
+
+To find the surface temperature of a planet, we can make a simple approximation to it's climate system: first that the planet is a black body, and second that the only factor determining the temperature of the planet is the power received by the planet and the power lost due to black body radiation. Power is received on the surface of the planet. Only half of the planet is facing the sun at any given time, and the poles receive less sun light than the equator. But an approximation to this is that the area receiving the power is that of a circle with the same radius of the planet $r_p$. The area where power is lost is the same as the surface area of the planet. The surface temperature is the temperature where there is an equilibrium between the power in and the power out:
+
+\begin{align}
+P_{in} = P_{out}
+\end{align}
+\begin{align}
+ P_{in} = L \frac{\pi r_p^2}{4\pi R_p^2}
+\end{align}
+\begin{align}
+ P_{out} = \sigma T_p^4 4\pi r_p^2
+\end{align}
+
+using the luminosity from above, we then get the following expression for the surface temperature.
+\begin{align}
+ T_p = \sqrt{\frac{R_*}{2R_p}}T_*
+\end{align}
+
+We can see that the surface temperature is not dependent on the size of the planet. This is because it's size  determents both the power in and out, and so cancels out in the equation.\\
+
+We also want to see if Isskji is inside the habitable zone. The habitable zone is zone within a distance from the star giving the planets a surface temperature where we can find liquid water and the planet is able to sustain life. This range is $T \in [260 , 390]$.
+
+\subsection{Planing the journey}
+In a normal space mission the first step is to get in orbit around the home planet, and then to burn to escape velocity to get to a heliocentric orbit. Then comes the interplanetary trajectory, after getting close to the destination planet a last orbital injection is needed.\\
+
+In our simulation we chose to ignore the first orbit. And instead of going for an escape burn, we chose to calculate a burn giving us zeros velocity at the edge of the so called sphere of influence. This is radius there we are no longer dominated by the gravity og our home planet, but rather that of the sun. This radius is given by\cite{sphere}
+
+\begin{align}
+r_{soi} \approx a \big( \frac{m_p}{M_*} \big) ^{2/5}
+\end{align}
+Where $a$ is the semi major axis of the planet's orbit. Since total energy is conserved, we can say that we want the kinetic energy at $r_{soi}$ to be zeros. We can then solve for the initial speed and find that 
+
+\begin{align}
+v_{0}^2 = 2Gm_p \left( \frac{1}{r} - \frac{1}{r_{soi}} \right) 
+\end{align}
+
+$r$ being the radius of the home planet. \\
+
+To get to the planet we are going to use Hohmann transfers\cite{SpaceDynamics}.
+
+The Hohmann transfer is given by
+
+\begin{align}
+v = \sqrt{2\mu \left( \frac{1}{R} - \frac{1}{R + R_p} \right)}
+\end{align}
+
+where $\mu = GM_*$ and $R$ is the distance from the sun to the home planet. It is important to note that this gives the total speed the spacecraft, and not the $\Delta v$. \\
+
+After this burn we would like to have an encounter with Isskji at the aphelion of the orbit of the spacecraft. We can find the time to this encounter:
+
+\begin{align}
+\Delta t = \pi \sqrt{\frac{(R +R_p)^3}{8\mu}}
+\end{align}
+
+The last thing we need to know is the angle between the home- and destination planet, so that the encounter happens at the aphelion. This angle is given by:
+
+\begin{align}
+\gamma = (\nu_2 -\nu_1) - \omega \Delta t
+\end{align}
+
+Where $\omega$ is the angular speed of Isskji and $(\nu_2 -\nu_1)$ is the angle of the orbit we want the encounter to be at. Since we want this to be at the aphelion, this angle has to be $\pi$
+
+Since we are inpatient, we want to make the two burns mentioned above in one burn $v_{launch}$. This is given by
+
+\begin{align}
+v_{launch}^2 = v_0^2 + v_{transfer}^2
+\end{align} 
+
+So the steps for getting an encounter with Isskji:
+
+\begin{enumerate}
+\item Find $\Delta t$
+\item Calculate and wait until the angle between the two planets are $\gamma$
+\item Launch with $v_{launch}^2 = v_0^2 + v_{transfer}^2$ 
+\end{enumerate}
+
+After getting an encounter we want to get in orbit with an orbital injection burn. A stable circular orbit happens when the gravitational force is equal to the centripetal force.
+
+\begin{align}
+v_{orb} = \sqrt{\frac{\mu}{r_{orb}}}
+\end{align}
+
+We need to find $\bold{v}_{orb}$. Since the orbit is circular, the velocity has to be perpendicular to the position at all time. And given an angle $\theta$ of the position it is easy to find an unit vector perpendicular to it, and $\bold{v}_{orb}$:
+
+\begin{align}
+\bold{v}_{orb} = v_{orb}(-\sin\theta,\cos\theta)
+\end{align}
+
+To find the $\Delta v$ we have to subtract the velocity which we already have, which is the velocity relative to the planet
+
+\begin{align}
+\bold{v}_{rel} = \bold{v} - \bold{v}_p
+\end{align} 
+
+So the final burn is given by:
+
+\begin{align}
+\Delta \bold{v} = v_{orb}(-\sin\theta,\cos\theta) - \bold{v}_{rel}
+\end{align}
+
+This equation can be given more geometrical expression, using an angle $\chi = \pi - \theta$, but in practice the above equation is the one that is implemented in the simulation.\\
+
+The orbital injection is at a distance from the planet where gravitational force from the planet is some constant $k$ larger than that of the sun:
+
+\begin{align}
+F_p = kF_* \Rightarrow \frac{Gm_p}{r^2} = \frac{GM_*}{R_p}
+\end{align}
+
+\begin{align}
+r = R_p\sqrt{\frac{m_p}{M_*}\frac{1}{k}}
+\end{align}
+
+In our simulation $k = 10$. \\
+
+The simulation is done over about 10 years with two different schemes with two different time steps:\\
+The first is in interplanetary space, where we only need a crude, but still accurate simulation. Here the time step is $\Delta t = 1/30000$. The second scheme happens when we are close to planets, where we have to have a more accurate simulation, and therefor lower time step $\Delta t' =\frac{\Delta t}{1000}$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \section{Results and Discussion}
@@ -215,7 +460,90 @@ The plot of the launch with fuel loss shows how the spacecraft loses fuel as it 
 
 We can see from the plot over that as the spacecraft reaches escape velocity, the mass of the fuel is more or less zero. This indicates that out expression for fuel gives the correct amount of fuel.
 
-\section{Appendix A: Symbols and Parameters} 
+\subsection{Simulation of out Solar System}
+\subsubsection{2-body problem}
+
+The first result is with one planet and the sun. We choose to just look at the largest planet and the sun
+
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width = 70mm]{part2onePlanet.png}
+\caption{The largest gas giant in the solar system and the sun. Since the planet is quite a distance from the sun, about 16 AU, it only got 1/3 of the way around it's orbit during the 20 years.}
+\end{center}
+\end{figure}
+
+We can see that we have the circular motion we expect, so it passes the rudimentary test for what we expect from planet-sun-system. \\ 
+
+It is more interesting to look at the whole system of 9 planets.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{part2fullSystem.png}
+\caption{The orbit of the all 9 planets and the sun. $x$ marks the initial position of the planets, while the ball represents the positions at the end of the simulation.}
+\end{subfigure}%
+~
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{part2innerPlanets.png}
+\caption{A closer look at the inner planets.}
+\end{subfigure}%
+\end{figure}
+
+We can see that even for the inner planets the simulation seem stable. Since these planets is closer to the sun, they will have orbited more times than the outer planet. There is an error from the numerical method for each orbit, these planets are expected to have accumulated a greater error than the outer planets. Since the we can see that the orbits are stable for the inner planets, we know that the orbits are stable for the rest of the system as well.\\
+
+The orbits were checked against the analytical solutions, and over the 20 year period, the largest relative error was no more than $0.0036\%$.
+
+
+\subsubsection{N-body problem}
+We are interested in seeing how the other planets influence the sun.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width = 70mm]{part2posSun.png}
+\caption{The motion of the sun. The sun has just finished one orbit of the barycenter of itself and the second largest planet. One can see that this is not a exactly circular orbit, this is because the sun is tugged by the largest planet, which is just 1/4 though its orbit.}
+\end{center}
+\end{figure}
+
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{part2sunNoNoise.png}
+\caption{The velocity of the sun towards and away from an observer, gotten from the red shift of the star light.}
+\end{subfigure}%
+~
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{part2sunNoise.png}
+\caption{The velocity of the sun with noise to emulate the noise one gets in real astronomical observations.}
+\end{subfigure}%
+\end{figure}
+
+We can see that even with noise added to the velocity, the motion is still clearly visible. The difference in velocity is $\pm 0.6 m/s$. With todays technology we are only capable of observing velocity differences of $1 m/s$, meaning that despite there being a clear motion in the data, someone with our technology would not be able to observe it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Appendix A: Numerical Methods}
+\subsection{Leapfrog}\label{sec:leap}
+
+ 
 \begin{itemize}
 \item $F_b$: Force from \textit{one} box.
 \item $n_b$: Number of boxes.
@@ -263,6 +591,11 @@ We can see that $\frac{F_b}{m_e}$ has the dimension of velocity. This expression
 \begin{equation}
 m_{f0} = m_l(e^{\frac{\Delta v m_e}{F_b}} - 1)
 \end{equation}
+
+
+
+\bibliography{ref} 
+\bibliographystyle{plain}
 
 
 
