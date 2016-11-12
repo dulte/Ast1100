@@ -47,7 +47,7 @@
 \maketitle
 
 \begin{abstract}
-In this articles I am interested simulating a complete interplanetary space voyage. I am going to look at the construction of an easy rocket engine, how we can simulate an entire solar system, how to transverse the large empty space between it's planets and finally how to land on one of the planets. On the way we are going to try to orient, and try to analyze the atmosphere to the target planet. Last we are going to put these simulation to the test and send a satellite to this planet, and hopefully manage to land safely.
+In this articles I am interested simulating a complete interplanetary space voyage. I am going to look at the construction of an easy rocket engine, how we can simulate an entire solar system, how to transverse the large empty space between its planets and finally how to land on one of the planets. On the way we are going to try to orient, and try to analyze the atmosphere to the target planet. Last we are going to put these simulation to the test and send a satellite to this planet, and hopefully manage to land safely.
 \end{abstract} 
 
 \paragraph*{Constants and Variables}
@@ -63,9 +63,13 @@ $m_e$ & Mass of the particles escaping per second per box. \\
 $M_s$ & Mass of the star.\\
 $m_{f0}$ & Mass of fuel when launching. \\
 $T_*$ & Temperature of the Star\\
-$T_p$ & Temperature of the destination planet. \\
+$T_p$ and $T_0$ & Temperature of the destination planet. \\
 $r_p$ & Radius of the destination planet. \\
 $R_p$ & Distance from sun to destination planet. \\
+$m_h$ & Mass of $H_2$.\\
+$g_p$ & Gravitational acceleration of the destination planet. \\
+$\mu$ & The mean molecular mass of the atmosphere of the destination planet.\\
+$\rho_0$ & Density at the surface of the destination planet.
 \end{tabular}
 \end{center}
 
@@ -231,7 +235,7 @@ The system was simulated with the 3 biggest planets -- the smaller planets will 
 \subsection{Information about planet}
 Before setting out on our journey, there are some things we want to know about where we are going. First is the size of solar panels we need to bring, second is the surface temperature and whether Isskji is inside the habitable zone.
 
-When we have landed on Isskji, we want the lander to be able to operate from the power it receives from it's solar panels. We therefor need to calculate the power due to the sun at Isskji's distance from the sun. Since 
+When we have landed on Isskji, we want the lander to be able to operate from the power it receives from its solar panels. We therefor need to calculate the power due to the sun at Isskji's distance from the sun. Since 
 
 \begin{align}
 P = FA
@@ -275,7 +279,7 @@ We can thus calculate the area we need the solar panel to be
 A = P \cdot \frac{R_p^2}{R_*^2 \sigma T_*^4} 
 \end{align}
 
-To find the surface temperature of a planet, we can make a simple approximation to it's climate system: first that the planet is a black body, and second that the only factor determining the temperature of the planet is the power received by the planet and the power lost due to black body radiation. Power is received on the surface of the planet. Only half of the planet is facing the sun at any given time, and the poles receive less sun light than the equator. But an approximation to this is that the area receiving the power is that of a circle with the same radius of the planet $r_p$. The area where power is lost is the same as the surface area of the planet. The surface temperature is the temperature where there is an equilibrium between the power in and the power out:
+To find the surface temperature of a planet, we can make a simple approximation to its climate system: first that the planet is a black body, and second that the only factor determining the temperature of the planet is the power received by the planet and the power lost due to black body radiation. Power is received on the surface of the planet. Only half of the planet is facing the sun at any given time, and the poles receive less sun light than the equator. But an approximation to this is that the area receiving the power is that of a circle with the same radius of the planet $r_p$. The area where power is lost is the same as the surface area of the planet. The surface temperature is the temperature where there is an equilibrium between the power in and the power out:
 
 \begin{align}
 P_{in} = P_{out}
@@ -292,7 +296,7 @@ using the luminosity from above, we then get the following expression for the su
  T_p = \sqrt{\frac{R_*}{2R_p}}T_*
 \end{align}
 
-We can see that the surface temperature is not dependent on the size of the planet. This is because it's size  determents both the power in and out, and so cancels out in the equation.\\
+We can see that the surface temperature is not dependent on the size of the planet. This is because its size  determents both the power in and out, and so cancels out in the equation.\\
 
 We also want to see if Isskji is inside the habitable zone. The habitable zone is zone within a distance from the star giving the planets a surface temperature where we can find liquid water and the planet is able to sustain life. This range is $T \in [260 , 390]$.
 
@@ -389,7 +393,7 @@ r = R_p\sqrt{\frac{m_p}{M_*}\frac{1}{k}}
 In our simulation $k = 10$. \\
 
 The simulation is done over about 10 years with two different schemes with two different time steps:\\
-The first is in interplanetary space, where we only need a crude, but still accurate simulation. Here the time step is $\Delta t = 1/30000$. The second scheme happens when we are close to planets, where we have to have a more accurate simulation, and therefor lower time step $\Delta t' =\frac{\Delta t}{1000}$
+The first is in interplanetary space, where we only need a crude, but still accurate simulation. Here the time step is $\Delta t = 1/30000$. The second scheme happens when we are close to planets, where we have to have a more accurate simulation, and therefor lower time step $\Delta t' =\frac{\Delta t}{1000}$. We also use a interpolated function of the positions of the planets. This is so that we have continuous paths.
 
 
 \subsection{Navigation}
@@ -437,7 +441,7 @@ y = k(\cos \theta ) = 0
 k = \frac{2}{1+\sin \theta \cos (\phi - \phi_0)}
 \end{align}
 
-Solving for $\theta$ we find that $\theta = \pi/2$. We can put this in the equation for $x$ and find it's max/min value:
+Solving for $\theta$ we find that $\theta = \pi/2$. We can put this in the equation for $x$ and find its max/min value:
 
 \begin{align}
 x = \frac{2 \sin(\phi - \phi_0)}{1+\cos (\phi - \phi_0)}
@@ -469,7 +473,7 @@ E(\phi) = \sum_{ij}(pix_{ij}^{\phi} - pix_{ij}^{taken})^2
 The angle $\phi$ which gives the lowest error $E(\phi)$ is the orientation of the satellite.
 
 \subsubsection{Velocity}
-A spectrograph on-board the satellite finds the doppler shift of to distant stars. These two stars are again so far away, that the direction of their motion will be observed to be the same at any position in the solar system. From the doppler shift one star it is possible to find the radial velocity relative to the star. We know the  relative to the star for the rest frame of star. From these two points of data the velocity of the satellite can be found
+A spectrograph on-board the satellite finds the doppler shift of $H_{\alpha}$ (656.3 mm) of to distant stars. These two stars are again so far away, that the direction of their motion will be observed to be the same at any position in the solar system. From the doppler shift one star it is possible to find the radial velocity relative to the star. We know the  relative to the star for the rest frame of star. From these two points of data the velocity of the satellite can be found
 
 \begin{align}
 v_{sat} = v_{refstar} - v_{rel}
@@ -546,14 +550,96 @@ We can see that if $\phi_2 = \phi_1$ the matrix becomes singular and not possibl
 
 
 \subsubsection{Position}
+From the radar the satellite gets the distance to all planets and the sun. It will also know the positions of all the planets from our simulations. From this the satellite has to find its own position. There are two methods for doing this. The first is triangulation: given the distance and positions of three or more of the planets, it is possible to find an analytical expression for the position. Secondly this can be done numerically with a gradient decent\ref{sec:gradient}. We chose to go for the latter option, mostly for the fun this method is to program.
+
+With this 
 
 
 
 
+\section{Simulating the atmosphere}
+
+For getting a successful landing, we have to know what the atmosphere looks like. The atmosphere was modeled as adiabatic if the temperature $T < T_0/2$ and isothermal above this height. The first step for doing this is to find the average molecular weight of the atmosphere.
+
+\subsection{The average molecular weight of the atmosphere}
+
+We have the entire spectrum of the atmosphere. The gases we expect we can find are
+
+\begin{itemize}
+\item Oxygen  $O_2$ has  absorption  lines  at  630nm,
+690nm and 760nm
+\item Water  vapour  $H_2O$  has  absorption  lines  at
+720nm,  820nm  and  940nm
+\item Carbon dioxide $CO_2$ has absorption lines at
+1400nm and 1600nm
+\item Methane $CH_4$ has   absorption   lines   at
+1660nm,  2200nm
+\item Carbon monoxide $CO$ has an absorption line
+at 2340nm
+\item Nitrous oxide $N_2O$ has  an  absorption  line  at  2870nm
+\end{itemize}
+
+The satellite which took the spectrum of the atmosphere had a velocity $< 10 km/s$, so there will be a doppler shift in the data. The gases will also have a temperature, which is unknown, and there will be quite a lot of noise in the data. Because of this, it is not easy to see the spectral lines. To check a gas is in the atmosphere we have to try to fit a model for the flux of a spectral data. The model is given by:
+
+\begin{align}
+F^{model}(\lambda) = F_{max} +(F_{min} - F_{max})e^{\frac{-(\lambda - \lambda_{center})^2}{2\sigma^2}}
+\end{align}
+
+We know that the $F_{max} = 1$, and we can estimate the $F_{min}>0.7$, but the exact value is unknown. So the unknown quantities in this model is $F_{min}$, $\lambda_{center}$ and $\sigma$ ($sigma$ being the standard deviation of the of the flux around $\lambda_{center}$ due to temperature). To find these quantities we are going to use a minimum chi-square estimation. We are going to minimize
+
+\begin{align}
+\chi^2(\lambda_{center},F_{min},\sigma) = \sum_{i = 1}^N \frac{(F(\lambda) - F^{model}(\lambda))^2}{\sigma_i^2}
+\end{align}
+
+where $\sigma_i$ is not the same $\sigma$ as in the model, but the noise of the data, which varies for each measurement. $\sigma_i$ is known.\\
+
+We are going to minimize this by guessing random numbers for the unknown variables, and then pick the numbers which gives the lowest $\chi^2$. This can also be done with gradient descent. We have some ideas about the values of the variables and will chose random numbers based on this. $F_{min}$ will be between $0.7$ and $1$. We also knew that the spectral lines at the most can be shifted by
+
+\begin{align}
+\Delta \lambda_{max/min} = \pm \frac{10 km/s}{c} \lambda
+\end{align}
+
+The temperature of the gases will be between $150K$ and $450K$, and the $\sigma_{max/min}$ can be determined from this by:
+
+\begin{align}
+FWHM = \frac{2 \lambda_0}{c}\sqrt{\frac{2kT \ln 2}{m}}
+\end{align}
+
+\begin{align}
+\sigma = \frac{FWHM}{2\sqrt{2 \ln 2}}
+\end{align}
+
+We chose 300 values for $\lambda_{center}$, and 30 for $F_{min}$ and $\sigma$. We were not interested in finding $\chi^2$ using the whole spectrum, since the amount of data i huge. Instead we used only a small part of the spectrum around where we knew the spectral lines to be. We then found which values gives the best fitting model for each line in the list above.\\
+
+Having found the models, we plotted those against the spectrum to see whether the models were real, or they were false positives. This was done visually. Including whether or not the models fitted we looked at the temperature. We already knew what the temperature of the planet was suppose to be, and if temperature of a specific model was to far from the expected, it was trowed out, even if it seemed to fit the data nicely. We then said that for every spectral line of a gas we found, we added one part of this gas in the calculation of the mean molecular weight. The mean molecular weight was then calculated as:
+
+\begin{align}
+\mu = \frac{1}{N}\sum_{i=1}^N m_i
+\end{align}
+
+$m_i$ being the molecular mass of the gases found.
+
+\subsubsection{The atmosphere}
+We found the expression for density of the atmosphere analytically\ref{sec:atmosphere}. The equation for the density of adiabatic part of the part of the atmosphere is
+
+\begin{align}
+\rho (h) = \rho_0 \left(1-\frac{\gamma - 1}{\gamma} \frac{h}{h_0}\right)^{\frac{1}{\gamma - 1}}
+\end{align}
 
 
+Where $h_0 = \frac{kT}{m_H g \mu}$. The temperature of the adiabatic atmosphere
 
+\begin{align}
+T(h) = T_0 \left( 1 -\frac{\gamma - 1}{\gamma} \frac{h}{h_0} \right)
+\end{align}
 
+For the isothermal atmosphere the density is
+
+\begin{align}
+\rho (h) = \rho_0'e^{-\frac{h}{h_0}}
+\end{align}
+
+and the temperature is alway $T_0/2$. $\rho_0' = \rho_0 \left( \frac{1}{2} \right) ^{}\frac{1}{\gamma + 1}$ is the density at the hight where the atmosphere goes from adiabatic to isothermal.
 
 
 
@@ -623,7 +709,7 @@ The first result is with one planet and the sun. We choose to just look at the l
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width = 70mm]{part2onePlanet.png}
-\caption{The largest gas giant in the solar system and the sun. Since the planet is quite a distance from the sun, about 16 AU, it only got 1/3 of the way around it's orbit during the 20 years.}
+\caption{The largest gas giant in the solar system and the sun. Since the planet is quite a distance from the sun, about 16 AU, it only got 1/3 of the way around its orbit during the 20 years.}
 \end{center}
 \end{figure}
 
@@ -697,6 +783,8 @@ We can see that even with noise added to the velocity, the motion is still clear
 \section{Appendix A: Numerical Methods}
 \subsection{Leapfrog}\label{sec:leap}
 
+\subsection{Gradient descend}\label{sec:gradient}
+
  
 \begin{itemize}
 \item $F_b$: Force from \textit{one} box.
@@ -746,6 +834,112 @@ We can see that $\frac{F_b}{m_e}$ has the dimension of velocity. This expression
 m_{f0} = m_l(e^{\frac{\Delta v m_e}{F_b}} - 1)
 \end{equation}
 
+
+\section{Appendix C: The Expression for the Atmosphere}\label{sec:atmosphere}
+\subsection{The isothermal atmosphere}
+To find the analytical expression for the isothermal part of atmosphere we start with the equations for an ideal gas \cite{1e}
+
+\begin{align}\label{eq:idealgas}
+P = \frac{\rho kT}{\mu m_H}
+\end{align}
+
+and for hydrostatic equilibrium 
+
+\begin{align}\label{eq:hydrostatic}
+\frac{dP}{dr} = -\rho \frac{GM(r)}{r^2}
+\end{align}
+
+We are going to make the approximation that the gravitational acceleration is the same in the whole atmosphere:
+
+\begin{align}
+\frac{GM(r)}{r^2} = g_r
+\end{align}
+
+we solve \ref{eq:idealgas} for $\rho$ and sat it in to \ref{eq:hydrostatic}, we get that
+
+\begin{align}
+\frac{dP}{dr} = -Pg h_0
+\end{align}
+
+\begin{align}
+h_0 = \frac{kT}{m_H g \mu}
+\end{align}
+
+This differential equation can easily be solved by separating variables, and we get that
+
+\begin{align}
+P(h) = C e^{-\frac{h}{h_0}} = P_0 e^{-\frac{h}{h_0}}
+\end{align}
+
+And using this in the ideal gas law we find
+
+\begin{align}
+\rho (h) = \frac{P_0}{h_0} e^{-\frac{h}{h_0}} = \rho_0 e^{-\frac{h}{h_0}}
+\end{align}
+
+\subsection{The adiabatic atmosphere}
+Including equations \ref{eq:idealgas} and \ref{eq:hydrostatic} there is one more equation for an adiabatic system
+
+\begin{align}\label{eq:abiabatic}
+P^{1-\gamma}T^{\gamma} = constant
+\end{align}
+
+$\gamma = 1.4$. We do not know this constant but by differentiating the expression we can get rid of it (this first step was inspired by \cite{adia}, but the rest was done by us)
+
+\begin{align}
+\frac{d}{dh}(P^{1-\gamma}T^{\gamma}) = \frac{dP}{dh}(1-\gamma)\left(\frac{T}{P} \right)^{\gamma} + \frac{dT}{dh}\gamma \left(\frac{T}{P} \right)^{\gamma-1} = 0
+\end{align}
+
+\begin{align}
+\Rightarrow \frac{dP}{P} = \frac{\gamma}{\gamma - 1}\frac{dT}{T}
+\end{align}
+
+rewriting the hydrostatic equilibrium we get that
+
+\begin{align}
+\frac{dP}{P} = -(g h_0) dh = \frac{\gamma}{\gamma - 1}\frac{dT}{T}
+\end{align}
+
+And solving this differential equation gives us the temperature
+
+\begin{align}
+T(h) = -g h_0 \frac{\gamma-1}{\gamma}h + C
+\end{align}
+
+$T(0) = C = T_0$
+
+\begin{align}\label{eq:adiatemp}
+T(h) = T_0 \left( 1 -\frac{\gamma - 1}{\gamma} \frac{h}{h_0} \right)
+\end{align}
+
+Setting this back into \ref{eq:abiabatic} we get that
+
+\begin{align}
+P(h) = cT(h)^{\frac{\gamma}{\gamma-1}} = cT_0 \left( 1 -\frac{\gamma - 1}{\gamma} \frac{h}{h_0} \right)^{\frac{\gamma}{\gamma-1}} = P_0\left( 1 -\frac{\gamma - 1}{\gamma} \frac{h}{h_0} \right)^{\frac{\gamma}{\gamma-1}}
+\end{align}
+
+Now using the ideal gas law we get that
+
+\begin{align}
+\rho (h) = \frac{P(h)}{T(h)}\frac{\mu m_H}{k} = \frac{P_0}{T_0}\frac{\mu m_H}{k}\left( 1 -\frac{\gamma - 1}{\gamma} \frac{h}{h_0} \right)^{\frac{\gamma}{\gamma-1} - 1}
+\end{align}
+
+\begin{align}\label{eq:adiadens}
+\rho (h) = \rho_0 \left(1-\frac{\gamma - 1}{\gamma} \frac{h}{h_0}\right)^{\frac{1}{\gamma - 1}}
+\end{align}
+
+\subsection{The boundary}
+We are interested in finding $\rho_0$ for the isothermal atmosphere, which is the pressure at the height where $T(h) = T_0/2$. If we use \ref{eq:adiatemp} with  $T(h) = T_0/2$ and solve for $h$, we find that this hight is
+
+\begin{align}
+h_{boundary} = \frac{\gamma}{2(\gamma -1)}h_o
+\end{align}
+
+and using this in \ref{eq:adiadens} we get that 
+
+\begin{align}
+\rho_0^{isothermal} = \rho(h_{boundary}) = \rho_0 \left(\frac{1}{2} \right) ^{\frac{1}{\gamma +1}}
+\end{align}
 
 
 \bibliography{ref} 
