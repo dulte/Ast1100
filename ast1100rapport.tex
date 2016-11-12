@@ -75,11 +75,11 @@ $R_p$ & Distance from sun to destination planet. \\
 
 \section{Introduction}
 
-In this articles we shall look at many of the aspects of sending and landing a spacecraft on out neighbor planet Isskji. \\
+In this articles we shall look at many of the aspects of sending and landing a satellite on out neighbor planet Isskji. \\
 
 We are first going to look at the engine, approximating it by a simple "particle in a box" model, and seeing what kind of force we can expect. We will then you Newton's law of gravity for N-bodies, and simulate our solar system. We also what to see if Isskji is in the habitable zone, and if the trip is worth taking. Having a knowledge about how out solar system will look in the future, we can begin to plan out trip, doing some calculations using Hohmann transfers and seeing if this can get us to Isskji. With list of maneuvers we need to get to our destination, we can look at the fuel usage, and deriving a rocket equation specific for our engine. \\
 
-Under way to Isskji, the spacecraft need a way of knowing where it is. By getting data about the distance to the other planets, the spectrum of two distant star and pictures of the starscape, it will be able, though gradient descent, Doppler shift and least square comparisons to find all the information it needs to orient it self.\\
+Under way to Isskji, the satellite need a way of knowing where it is. By getting data about the distance to the other planets, the spectrum of two distant star and pictures of the starscape, it will be able, though gradient descent, Doppler shift and least square comparisons to find all the information it needs to orient it self.\\
 
 Finally in orbit around Isskji, we need to make a model of the atmosphere to see how big a parachute the lander will have to have to safely land on the planet. We also have to scout the planet, finding a good place to land, and calculate the trajectory needed to get us to our desired landing point.
 
@@ -141,7 +141,7 @@ An important choice is what to do when a particle escape. Since we want the pres
 
 \subsection{A simple launch}
 
-Before we send the spacecraft on the full journey, we want to see what it is capable of with a small launch to reach escape velocity. Escape velocity is given by 
+Before we send the satellite on the full journey, we want to see what it is capable of with a small launch to reach escape velocity. Escape velocity is given by 
 
 \begin{align}\label{eq:escape}
 v = \sqrt{\frac{2GM}{r}}
@@ -157,7 +157,7 @@ v(t) = \frac{F}{m} t = \frac{F_{per box}n_{boxes}}{m_{launcher}} t
 n_{boxes} = \frac{v m}{F t}
 \end{align}
 
-We are now going to assume that the fuel does not contribute to the mass of the spacecraft, and see how much fuel is needed to get to escape velocity. Since this is an unrealistic assumption, we have to have an analytical expression for the needed fuel. In the appendices in section \ref{sec:Fuel} this is shown to be:
+We are now going to assume that the fuel does not contribute to the mass of the satellite, and see how much fuel is needed to get to escape velocity. Since this is an unrealistic assumption, we have to have an analytical expression for the needed fuel. In the appendices in section \ref{sec:Fuel} this is shown to be:
 
 \begin{align}\label{eq:Fuel}
 m_{f0} = m_l(e^{\frac{\Delta v m_e}{F_b}} - 1)
@@ -320,9 +320,9 @@ The Hohmann transfer is given by
 v = \sqrt{2\mu \left( \frac{1}{R} - \frac{1}{R + R_p} \right)}
 \end{align}
 
-where $\mu = GM_*$ and $R$ is the distance from the sun to the home planet. It is important to note that this gives the total speed the spacecraft, and not the $\Delta v$. \\
+where $\mu = GM_*$ and $R$ is the distance from the sun to the home planet. It is important to note that this gives the total speed the satellite, and not the $\Delta v$. \\
 
-After this burn we would like to have an encounter with Isskji at the aphelion of the orbit of the spacecraft. We can find the time to this encounter:
+After this burn we would like to have an encounter with Isskji at the aphelion of the orbit of the satellite. We can find the time to this encounter:
 
 \begin{align}
 \Delta t = \pi \sqrt{\frac{(R +R_p)^3}{8\mu}}
@@ -392,6 +392,160 @@ The simulation is done over about 10 years with two different schemes with two d
 The first is in interplanetary space, where we only need a crude, but still accurate simulation. Here the time step is $\Delta t = 1/30000$. The second scheme happens when we are close to planets, where we have to have a more accurate simulation, and therefor lower time step $\Delta t' =\frac{\Delta t}{1000}$
 
 
+\subsection{Navigation}
+The satellite is equipped with three navigation instruments.
+
+\begin{itemize}
+\item A camera to take pictures of the stars, this is used to determine orientation.
+\item A radar to find the distance to all the planet, this is used to determine position.
+\item A spectrograph to find the doppler shift of two distant star, this is used to determine the velocity. 
+\end{itemize}
+
+\subsubsection{Orientation}
+The satellite is able to take pictures of the stars, and compare this picture to a complete atlas of starscape. This picture is then compared using a least square comparison. The orientation which gives smallest error, is determined to be the correct orientation. Since out whole journey is going to by in the solar equatorial plane, we are only interested in knowing the orientation in the $\phi$ angle, letting $\theta = \pi /2$.\\
+
+The starscape as seen by the satellite is a sphere. We'll approximate the stars to be an infinity away from us, this means that the formation of the stars are independent on where in the solar system we are. To get a picture of the stars we have to find a way to translate the curved geometry of the starscape to the flat picture. This is done with \textit{stereographic projection}\cite{part4}.\\
+
+Before we start the journey we have to make the atlas, from a place where the orientation always is known. We are going to do this by turning the camera $360^\circ$ around the equatorial plane, taking a picture for every degree. The place where the pixel $(0,0)$ is pointing has the coordinate $(\theta_0,\phi_0)$(as stated above $\theta_0$ is always $\pi/2$). For each pixel of the picture, the camera needs to translate this to the polar coordinates. This is done by: 
+
+\begin{align}
+\theta = \frac{\pi}{2} - \sin^{-1}\left( \cos c \cos \theta_0 + \frac{y_{picture}\sin c\ sin \theta_0}{\rho} \right)
+\end{align}
+
+\begin{align}
+\phi = \phi_0 + \tan^{-1} \left( \frac{x_{picture}\sin c}{\rho \sin \theta_0 \cos c - y_{picture}\cos \theta_0 sin c} \right)
+\end{align}
+
+where 
+
+\begin{align}
+\rho = \sqrt{x_{picture}^2 + y_{picture}^2}
+\end{align}
+
+\begin{align}
+c = 2tan^{-1} \left( \frac{\rho}{2} \right)
+\end{align}
+
+
+The camera has a field of view in the vertical direction $\alpha_{\phi}$ and the horizontal direction $\alpha_{\theta}$, both being $70^\circ$. We need to find the how large our pictures can be. We are going to use the expressions for $x_{picture}$ and $y_{picture}$ found here \cite{part4}. To find how large the picture can be in the x-direction, we set $y$ to be $0$, $\theta_0 = 0$ and get
+
+\begin{align}
+y = k(\cos \theta ) = 0
+\end{align}
+
+\begin{align}
+k = \frac{2}{1+\sin \theta \cos (\phi - \phi_0)}
+\end{align}
+
+Solving for $\theta$ we find that $\theta = \pi/2$. We can put this in the equation for $x$ and find it's max/min value:
+
+\begin{align}
+x = \frac{2 \sin(\phi - \phi_0)}{1+\cos (\phi - \phi_0)}
+\end{align}
+
+\begin{align}
+x_{max/min} = \pm \frac{2 \sin(\phi - \phi_0)_{max}}{1+\cos (\phi - \phi_0)_{max}}
+\end{align}
+
+we set $(\phi - \phi_0)_{max} = \alpha_{\phi}/2$. We then get that
+
+\begin{align}
+x_{max/min} = \pm \frac{2 \sin(\alpha_{\phi}/2)}{1+\cos (\alpha_{\phi}/2)}
+\end{align}
+
+Doing the same for $y$ we find that 
+
+\begin{align}
+y_{max/min} = \pm \frac{2 \sin(\alpha_{\theta}/2)}{1+\cos (\alpha_{\theta}/2)}
+\end{align}
+
+
+When we now have an atlas of the starscape, the satellite can use this to orientate. To do this, it will take a picture. then compare pixel by pixel with the 360 pictures, finding a total error of
+ 
+\begin{align}
+E(\phi) = \sum_{ij}(pix_{ij}^{\phi} - pix_{ij}^{taken})^2
+\end{align}
+
+The angle $\phi$ which gives the lowest error $E(\phi)$ is the orientation of the satellite.
+
+\subsubsection{Velocity}
+A spectrograph on-board the satellite finds the doppler shift of to distant stars. These two stars are again so far away, that the direction of their motion will be observed to be the same at any position in the solar system. From the doppler shift one star it is possible to find the radial velocity relative to the star. We know the  relative to the star for the rest frame of star. From these two points of data the velocity of the satellite can be found
+
+\begin{align}
+v_{sat} = v_{refstar} - v_{rel}
+\end{align}
+
+If we know $v_{sat}$ in the direction both of the two star, we can find the velocity in the xy-plane. If the angle between the stars had been $\pi/2$ this would have been trivial, but since this isn't necessarily the case, we have to do a transformation of coordinate system. From \cite{part4} we get that:
+
+\begin{align}
+\begin{pmatrix}
+v_1\\
+v_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+\cos \phi_1 & \sin \phi_1 \\
+\cos \phi_2 & \sin \phi_2 
+\end{pmatrix}
+\begin{pmatrix}
+v_x\\
+v_y
+\end{pmatrix}
+\end{align}  
+
+where $v_1,\phi_1$ are the $v_{sat}$ towards planet 1 and the angle for planet 1, and $v_2,\phi_2$ the same for planet 2. But we are interested in $v_x,
+v_y$, so we have to invert the matrix. For a 2x2 matrix the inverse is given by:
+
+\begin{align}
+A^{-1} = 
+\begin{pmatrix}
+a & b \\
+c & d 
+\end{pmatrix}^{-1}
+=
+\frac{1}{det(A)} 
+\begin{pmatrix}
+d & -b \\
+-c & a 
+\end{pmatrix}
+\end{align}
+
+So we can find $v_x,v_y$ by the inverted equation
+
+\begin{align}
+\begin{pmatrix}
+v_x\\
+v_y
+\end{pmatrix}
+=
+\frac{1}{\cos \phi_1 \sin \phi_2 - \cos \phi_2 \sin \phi_1}
+\begin{pmatrix}
+\sin \phi_2 & -\sin \phi_1 \\
+-\cos \phi_2 & \cos \phi_1 
+\end{pmatrix}
+\begin{pmatrix}
+v_1\\
+v_2
+\end{pmatrix}
+\end{align}
+
+\begin{align}
+=
+\frac{1}{\sin (\phi_2 - \phi_1)}
+\begin{pmatrix}
+\sin \phi_2 & -\sin \phi_1 \\
+-\cos \phi_2 & \cos \phi_1 
+\end{pmatrix}
+\begin{pmatrix}
+v_1\\
+v_2
+\end{pmatrix}
+\end{align}
+
+We can see that if $\phi_2 = \phi_1$ the matrix becomes singular and not possible to invert, and it is thus impossible to find the velocity of the satellite. This is because the $v_1$ and $v_2$ in this case are parallel, and we haven't enough information to find the velocity in any other direction than this direction.
+
+
+\subsubsection{Position}
 
 
 
@@ -430,7 +584,7 @@ Number of particles escaped per sec:  6.4252e+13 \\
 Mass lost per sec:  2.120316e-13
 \end{tcolorbox}
 
-We can see that the force exerted by a single box is minuscule, and a lot of boxes are needed to lift the spacecraft of the ground. \\
+We can see that the force exerted by a single box is minuscule, and a lot of boxes are needed to lift the satellite of the ground. \\
 
 The data above are from one specific simulation, and will vary enough to make results in later parts of this article a bit different. We will therefor use the data given here for all subsequent situations where they are needed.
 
@@ -438,27 +592,27 @@ The data above are from one specific simulation, and will vary enough to make re
 
 Using equation \ref{eq:escape} we see that $v_{escape} \approx 16596.9 m/s$. And from \ref{eq:boxes} we get that the amount of boxes we need are $n = 1.76 \cdot 10^{13}$. \\
 
-The plot we get from launching the spacecraft without fuel loss:
+The plot we get from launching the satellite without fuel loss:
 
 
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width = 70mm]{part1launchConstMass.png}
-\caption{Shows the mass of fuel increasing has the spacecraft accelerates. The craft end up using right under 2000 kg of fuel.}
+\caption{Shows the mass of fuel increasing has the satellite accelerates. The craft end up using right under 2000 kg of fuel.}
 \end{center}
 \end{figure}
 
-The plot of the launch with fuel loss shows how the spacecraft loses fuel as it ascends. The initial fuel was given by equation \ref{eq:Fuel} as $2250.966 kg$.
+The plot of the launch with fuel loss shows how the satellite loses fuel as it ascends. The initial fuel was given by equation \ref{eq:Fuel} as $2250.966 kg$.
 
 
 \begin{figure}[H]
 \begin{center}
 \includegraphics[width = 70mm]{part1launchVarMass.png}
-\caption{Shows the mass of fuel slowly going to zeros as the spacecraft reaches escape velocity.}
+\caption{Shows the mass of fuel slowly going to zeros as the satellite reaches escape velocity.}
 \end{center}
 \end{figure}
 
-We can see from the plot over that as the spacecraft reaches escape velocity, the mass of the fuel is more or less zero. This indicates that out expression for fuel gives the correct amount of fuel.
+We can see from the plot over that as the satellite reaches escape velocity, the mass of the fuel is more or less zero. This indicates that out expression for fuel gives the correct amount of fuel.
 
 \subsection{Simulation of out Solar System}
 \subsubsection{2-body problem}
