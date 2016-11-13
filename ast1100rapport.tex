@@ -399,6 +399,7 @@ The orbital injection is at a distance from the planet where gravitational force
 F_p = kF_* \Rightarrow \frac{Gm_p}{r^2} = \frac{GM_*}{R_p}
 \end{align}
 
+
 \begin{align}\label{eq:safeDist}
 r = R_p\sqrt{\frac{m_p}{M_*}\frac{1}{k}}
 \end{align}
@@ -406,7 +407,16 @@ r = R_p\sqrt{\frac{m_p}{M_*}\frac{1}{k}}
 In our simulation $k = 10$. \\
 
 The simulation is done over about 10 years with two different schemes with two different time steps:\\
-The first is in interplanetary space, where I only need a crude, but still accurate simulation. Here the time step is $\Delta t = 1/30000$. The second scheme happens when I am close to planets, where I have to have a more accurate simulation, and therefor loIr time step $\Delta t' =\frac{\Delta t}{1000}$. I also use a interpolated function of the positions of the planets. This is so that I have continuous paths.
+The first is in interplanetary space, where I only need a crude, but still accurate simulation. Here the time step is $\Delta t = 1/30000$. The second scheme happens when I am close to planets, where I have to have a more accurate simulation, and therefor loIr time step $\Delta t' =\frac{\Delta t}{1000}$. I also use a interpolated function of the positions of the planets. This is so that I have continuous paths.\\
+
+Any correction burns near Isskji was planed as follow:
+
+\begin{enumerate}
+\item Find a unit vector $\hat{e}_{c}$ pointing towards where Isskji was going to be in a day or two
+\item Burn with $0.5\hat{e}_{c} $ to $ 0.8\hat{e}_{c}$
+\end{enumerate}
+
+This is not the most efficient method, but will make the trajectory of the satellite move more towards the planet. The factors were found by trail and error. 
 
 
 \subsection{Navigation}
@@ -862,6 +872,8 @@ I know that the habitable zone is the zone in the solar system where $T \in [260
 
 \subsection{Planing the Journey}
 
+The correct angle between the two planets, and therefor the launch, happend after $6.71585$ years.
+
 There was a lot of problems with this part of the simulation. While the algorithm should have worked, the problem, as I knew but didn't take seriously, was that Hohmann transfers and all the associated expressions only work for circular orbits. While the orbits of our home world and Isskji where almost circular, with eccentricity $e = 0.00526$ and $0.00855$, they Ire not completely circular. This meant that the transfers missed. To get an encounter with Isskji I therefor had to adjust $v_0^2$ and $v_{transfer}^2$ ever so slightly, with what in rocket science terminology is called a \textit{fudge factor}. $v_{transfer}^2$ is very sensitive to changes \cite{SpaceDynamics}, so the changes had to be small. Due to an early error in the code, I did not implement that
 
 \begin{align}
@@ -903,7 +915,9 @@ I where able to get quite close to Isskji. But not close enough. From \ref{eq:sa
 \end{subfigure}%
 \end{figure}
 
-I can see from \ref{fig:orbit} that I have simulated a successful journey and orbit around Isskji.
+\ref{fig:orbit} shows that I have simulated a successful journey and orbit around Isskji. It took $2.1$ years.\\
+
+Now I had the total $\Delta v$ for the journey, and could calculate the fuel the satellite needed to reach orbit around Isskji. I decided to bring $10 \%$ extra $\Delta v$. The amount of fuel turned out to be $20558.3 kg$ fuel. 
 
 
 \subsection{Navigation}
@@ -1013,6 +1027,12 @@ As will be describes below, the Hohmann transfer to get to low orbit in the simu
 
 The atmosphere of Isskji is quite thick, with $\rho_0 \approx 8$, this means that the safe distance for a stable low orbit is $390 km$, which is quite high compared with earth where a low orbit occurs at $160 km$ above the surface.\\
 
+\begin{figure}[H]
+\centering
+\includegraphics[width = 70mm]{part6orb.png}
+\caption{Shows the Hohmann transfer from high to low orbit.}
+\end{figure}
+
 In its equatorial orbit at $390 km$ 20 pictures were taken, between $ 90461-107461 sec$, to find a suitable landing site. Four are shown here (due to the fact that 20 pictures would take a lot of space).
 
 \begin{figure}[H]
@@ -1070,7 +1090,16 @@ The goal was $96.97^\circ$ (being in an equatorial orbit $\theta$ is always $180
 As we have seen Isskjis atmosphere is quite thick, $\rho_0 \approx 8$, so I didn't expect that the size of the parachute had to be very large to reach a safe landing velocity of $3m/s$. This turned out to be correct: the parachute need only be  $7.65 m^2$, which is smaller than a standard skydiving parachute.
 
 
+\subsection{Launching the Real Satellite} 
+Then it was time to launch the satellite for real. We waited $6.72$ years and launched. The launch was the same as in the simulation. I asked the satellite to orient it self after 1 and 2 years. The first orientation was the calibration orientation, and went without any hitch. Both orientations showed the satellite to be a little of course, but not by very much. 
 
+\begin{tcolorbox}
+Orient 2:\\
+Expected Position: [ 1.07228774  4.08232315]\\
+Real Position: [1.07602195366 , 4.0834412672]
+\end{tcolorbox}
+
+This was so close that no correction burn was done yet. When the satellite came close to the point of the correction burn, it got the command to do multiple orientations. When the point closest to Isskji was found after $2.05$ years, I decided to do the correction burn, even though it wasn't the same place it the simulation. It was only as small burn $(-0.49152321, 0.26571668)$. One and a half days later the satellite was inside the safe distance from Isskji and was able to do an injection burn of $(0.11537089, -0.32227829)$. The total $\Delta v$ needed on the real journey was $3.145 AU/year$, which is lower than the expected $\Delta v$ from the simulations.\\
 
 
 
