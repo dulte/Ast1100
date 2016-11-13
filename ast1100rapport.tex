@@ -58,6 +58,7 @@ $k$ & Boltzmann's constant.\\
 $F_b$ & Force from \textit{one} box. \\
 $n_b$ & Number of boxes.\\
 $m_l$ & Mass of the satellite. \\
+$m_{lander}$ & Mass of the lander.\\
 $m_f$ & Mass of the fuel.\\
 $m_e$ & Mass of the particles escaping per second per box. \\
 $M_s$ & Mass of the star.\\
@@ -69,7 +70,8 @@ $R_p$ & Distance from sun to destination planet. \\
 $m_h$ & Mass of $H_2$.\\
 $g_p$ & Gravitational acceleration of the destination planet. \\
 $\mu$ & The mean molecular mass of the atmosphere of the destination planet.\\
-$\rho_0$ & Density at the surface of the destination planet.
+$\rho_0$ & Density at the surface of the destination planet. \\
+$\tau_p$ & Rotational period of the destination planet. \\
 \end{tabular}
 \end{center}
 
@@ -232,7 +234,7 @@ Given that these observers had sufficient technology to observe very small Doppl
 
 The system was simulated with the 3 biggest planets -- the smaller planets will not have a noticeable effect compared with the biggest planets, and are to necessary to take in to account--. The simulation lasted 60 years with a time step $\Delta t = 1/20000$.
 
-\subsection{Information about planet}
+\subsection{Information about the planet}
 Before setting out on our journey, there are some things we want to know about where we are going. First is the size of solar panels we need to bring, second is the surface temperature and whether Isskji is inside the habitable zone.
 
 When we have landed on Isskji, we want the lander to be able to operate from the power it receives from its solar panels. We therefor need to calculate the power due to the sun at Isskji's distance from the sun. Since 
@@ -275,9 +277,17 @@ P = A \cdot \frac{R_*^2}{R_p^2} \sigma T_*^4
 
 We can thus calculate the area we need the solar panel to be
 
-\begin{align}
+\begin{align}\label{eq:area}
 A = P \cdot \frac{R_p^2}{R_*^2 \sigma T_*^4} 
 \end{align}
+
+$T_*$ can be found by Wien's displacement law
+
+\begin{align}
+T = \frac{b}{\lambda_{max}}
+\end{align}
+
+$b \approx 2900 \mu m \cdot K$, and $\lambda_{max}$ is the peak of the wavelength for the sun.
 
 To find the surface temperature of a planet, we can make a simple approximation to its climate system: first that the planet is a black body, and second that the only factor determining the temperature of the planet is the power received by the planet and the power lost due to black body radiation. Power is received on the surface of the planet. Only half of the planet is facing the sun at any given time, and the poles receive less sun light than the equator. But an approximation to this is that the area receiving the power is that of a circle with the same radius of the planet $r_p$. The area where power is lost is the same as the surface area of the planet. The surface temperature is the temperature where there is an equilibrium between the power in and the power out:
 
@@ -292,7 +302,7 @@ P_{in} = P_{out}
 \end{align}
 
 using the luminosity from above, we then get the following expression for the surface temperature.
-\begin{align}
+\begin{align}\label{eq:temp}
  T_p = \sqrt{\frac{R_*}{2R_p}}T_*
 \end{align}
 
@@ -302,6 +312,8 @@ We also want to see if Isskji is inside the habitable zone. The habitable zone i
 
 \subsection{Planing the journey}
 In a normal space mission the first step is to get in orbit around the home planet, and then to burn to escape velocity to get to a heliocentric orbit. Then comes the interplanetary trajectory, after getting close to the destination planet a last orbital injection is needed.\\
+
+To get to the planet we used the so called conic approximation \cite{SpaceDynamics}, this means that we treated every this as a 2-body problem. We only looked at the satellite and the body of which the satellite was inside the sphere of influence(below). \\
 
 In our simulation we chose to ignore the first orbit. And instead of going for an escape burn, we chose to calculate a burn giving us zeros velocity at the edge of the so called sphere of influence. This is radius there we are no longer dominated by the gravity og our home planet, but rather that of the sun. This radius is given by\cite{sphere}
 
@@ -316,7 +328,7 @@ v_{0}^2 = 2Gm_p \left( \frac{1}{r} - \frac{1}{r_{soi}} \right)
 
 $r$ being the radius of the home planet. \\
 
-To get to the planet we are going to use Hohmann transfers\cite{SpaceDynamics}.
+To get to the planet we used Hohmann transfers\cite{SpaceDynamics}.
 
 The Hohmann transfer is given by
 
@@ -354,6 +366,7 @@ So the steps for getting an encounter with Isskji:
 \item Launch with $v_{launch}^2 = v_0^2 + v_{transfer}^2$ 
 \end{enumerate}
 
+
 After getting an encounter we want to get in orbit with an orbital injection burn. A stable circular orbit happens when the gravitational force is equal to the centripetal force.
 
 \begin{align}
@@ -386,7 +399,7 @@ The orbital injection is at a distance from the planet where gravitational force
 F_p = kF_* \Rightarrow \frac{Gm_p}{r^2} = \frac{GM_*}{R_p}
 \end{align}
 
-\begin{align}
+\begin{align}\label{eq:safeDist}
 r = R_p\sqrt{\frac{m_p}{M_*}\frac{1}{k}}
 \end{align}
 
@@ -404,6 +417,8 @@ The satellite is equipped with three navigation instruments.
 \item A radar to find the distance to all the planet, this is used to determine position.
 \item A spectrograph to find the doppler shift of two distant star, this is used to determine the velocity. 
 \end{itemize}
+
+The first time the satellite tried to orient we had to use these methods, this was to calibrate the satellites own orientation software, so for the rest of t he journey, the satellite was able to use the methods to find its own position.
 
 \subsubsection{Orientation}
 The satellite is able to take pictures of the stars, and compare this picture to a complete atlas of starscape. This picture is then compared using a least square comparison. The orientation which gives smallest error, is determined to be the correct orientation. Since out whole journey is going to by in the solar equatorial plane, we are only interested in knowing the orientation in the $\phi$ angle, letting $\theta = \pi /2$.\\
@@ -552,7 +567,23 @@ We can see that if $\phi_2 = \phi_1$ the matrix becomes singular and not possibl
 \subsubsection{Position}
 From the radar the satellite gets the distance to all planets and the sun. It will also know the positions of all the planets from our simulations. From this the satellite has to find its own position. There are two methods for doing this. The first is triangulation: given the distance and positions of three or more of the planets, it is possible to find an analytical expression for the position. Secondly this can be done numerically with a gradient decent\ref{sec:gradient}. We chose to go for the latter option, mostly for the fun this method is to program.
 
-With this 
+We used this algorithm to find the position:
+
+\begin{enumerate}
+\item Start with a guess.
+\item Loop over a fixed number of steps (we used $10^{5}$)
+\item Update the guess' coordinate $x_i$ with $\omega \frac{\partial E}{\partial x_i}$ for each step.
+\end{enumerate}
+
+Where $\frac{\partial E}{\partial x_i}$ is the error function differentiated for $x_i$
+
+\begin{align}
+\frac{\partial E}{\partial x_i} = \frac{2}{N}\sum_{j=1}^N (d_j^{guess} - d_j^{real})\frac{(x_ij^{guess} - x_ij^{planet}}{d_j^{guess}})
+\end{align}
+
+$d_j$ is the distance to the $j^{th}$ planet $j$, and $x_{ij}$ is the coordinate component $x_i$ to for that same planet. $\omega$ is the \textit{weight}, this is to keep the function from diverging \ref{sec:gradient}.
+
+To check if this method worked, we wrote a small test function which used this method on random positions, with random guesses.
 
 
 
@@ -593,7 +624,7 @@ We know that the $F_{max} = 1$, and we can estimate the $F_{min}>0.7$, but the e
 
 where $\sigma_i$ is not the same $\sigma$ as in the model, but the noise of the data, which varies for each measurement. $\sigma_i$ is known.\\
 
-We are going to minimize this by guessing random numbers for the unknown variables, and then pick the numbers which gives the lowest $\chi^2$. This can also be done with gradient descent. We have some ideas about the values of the variables and will chose random numbers based on this. $F_{min}$ will be between $0.7$ and $1$. We also knew that the spectral lines at the most can be shifted by
+We are going to minimize this by guessing random numbers for the unknown variables, and then pick the numbers which gives the lowest $\chi^2$. We have some ideas about the values of the variables and will chose random numbers based on this. $F_{min}$ will be between $0.7$ and $1$. We also knew that the spectral lines at the most can be shifted by
 
 \begin{align}
 \Delta \lambda_{max/min} = \pm \frac{10 km/s}{c} \lambda
@@ -639,9 +670,63 @@ For the isothermal atmosphere the density is
 \rho (h) = \rho_0'e^{-\frac{h}{h_0}}
 \end{align}
 
-and the temperature is alway $T_0/2$. $\rho_0' = \rho_0 \left( \frac{1}{2} \right) ^{}\frac{1}{\gamma + 1}$ is the density at the hight where the atmosphere goes from adiabatic to isothermal.
+and the temperature is alway $T_0/2$. $\rho_0' = \rho_0 \left( \frac{1}{2} \right) ^{\frac{1}{\gamma + 1}}$ is the density at the hight where the atmosphere goes from adiabatic to isothermal.
 
 
+\section{Landing}
+After getting into orbit around Isskji, we went from astronomical units to SI units, due to the smaller distances and velocities. The origin of the coordinate system was also chanced from the center of the sun to the center of Isskji.
+
+\subsection{Low orbit}
+After getting the satellite in orbit around Isskji, we had to fin a way of getting it in a low-Isskji orbit to take pictures and decide where to land.\\
+
+To get a stable orbit we had to try to stay clear of the atmosphere. We decided to go to a hight where the density of the atmosphere $\rho (h) < 10^{-12}$. This was then simulated to ensure a stable orbit. We then used a Hohmann transfer to get to the desired hight, and when the satellite reach this hight, the orbit was circularized. The satellite when went in an equatorial orbit to scout the planet for a landing site.\\
+
+To translate the picture in to a coordinate on the surface of the planet, we asked the satellite to orient it self right after the picture was taken. We then took the position vector of the satellite and turned it around, so it now pointed at the center of the planet. We could now find the angles of the landing site. But this was the angles of the surface of the planet in a global coordinates. since the surface rotates, this global coordinate is not the same as the local coordinate at the surface. One time we were sure the global coordinate were the same was at the time we entered the first orbit(this time was set to $t = 0$, and we define that the local and global coordinates are the same at this point). To find the global coordinate at $t_0$, we used the rotational period (in earth days) of the planet $\tau_p$ (since we were in an equatorial orbit, $\theta = \pi /2$, so we are only interested in $\phi$)
+
+\begin{align}
+\phi = tan^{-1}\left(\frac{y_{sat-planet}}{x_{sat-planet}} \right) - \frac{1}{\tau}t_{years}\cdot 2\pi
+\end{align}
+
+(we had to make sure that $\frac{1}{\tau}t_{years} < 1$ and if not we just subtracted the floored value $\frac{1}{\tau}t_{years} - floor(\frac{1}{\tau}t_{years})$)
+
+We then had the coordinate we wanted to land.
+
+\subsection{The Landing}
+After finding a place to land we had to find a way of landing there. Due to the difficulty of solving the landers interaction with the atmosphere in any smart way, this was done with brute force and guessing. The idea was to use another Hohmann transfer to some hight inside the atmosphere. The goal was to find a hight such that we would land on the surface after a half orbit. This hight was a result of trial and error. \\
+
+We could now simulate this maneuver, and see where we hit the surface. Knowing this position we could use the same method mentioned above to find the local coordinate on the surface. If this coordinate wasn't the desired coordinate the satellite would be asked to way in orbit for some time, then we would simulate the landing again. This procedure would be done until the satellite hit the landing site. This is a very brute force way of doing it, but it should work. 
+
+\subsection{A Safe Landing}
+
+The drag force of the atmosphere is given by:
+
+\begin{align}
+F_D = \frac{1}{2}\rho C_D A |\bold{v}| \bold{v}
+\end{align}
+
+$C_D$ is a coefficient determined by the geometry of the lander, and is set equal to $1$, and $A$ is the surface area of the lander. When this force is equal to the gravitational force, the lander has reach terminal velocity.
+
+\begin{align}
+\frac{GM_p m_l}{R^2} = \frac{1}{2}\rho C_D A |\bold{v}| \bold{v}
+\end{align}
+
+If we use the radius of the planet and the density of at the surface, we can find the terminal velocity at close to the surface.
+
+\begin{align}
+v = \sqrt{\frac{2GM_p m_{lander}}{R_p^2 \rho_0 A}}
+\end{align}
+
+We could use this to find the area we need the parachute to have if we wanted to land safely. 
+
+\begin{align}
+A = \frac{2GM_p m_{lander}}{R_p^2 \rho_0 v^2}
+\end{align}
+
+
+\section{Launching the Real Satellite}
+Having simulated a plan for the whole journey, it was time to launch the actual satellite. The satellite had two stages, first was the interplanetary journey, and the second was the orbit and landing on the planet.\\
+
+Since we had used the conic approximation to make the plan, we could not expect to use our plan without having to do some corrections under way. 
 
 
 
@@ -768,12 +853,71 @@ We can see that even with noise added to the velocity, the motion is still clear
 
 
 
+\section{Information about the planet}
+Out star has a temperature of $8284.6 K$, and a radius of $1610671.4 km$. The solar panels we used have an efficiency of $12\%$. Using this and \ref{eq:area} we found that the necessary area of the solar panels to have $40W$ of power was   $17.6 m^2$. \\
+
+We know that the habitable zone is the zone in the solar system where $T \in [260,390]$, from \ref{eq:temp} we found the habitable zone to be $r \in [8.1765\cdot 10^8,3.63402\cdot 10^8]$ in $km$. This meant that Isskji, being $6.38 \cdot 10^8 km$ from the sun, was i the middle of the habitable zone.The calculated surface temperature of Isskji is $294.4 K$, a quite comfortable temperature. This was what we had expected after earlier telescope images had shown Isskji to be a garden planet. This gave insured us that Isskji was an interesting planet to explore, in the hope of finding life (the fact that it is our neighbor planet also played a role in the decision.) 
+
+\section{Planing the Journey}
+
+There was a lot of problems with this part of the simulation. While the algorithm should have worked, the problem, as we knew but didn't take seriously, was that Hohmann transfers and all the associated expressions only work for circular orbits. While the orbits of our home world and Isskji where almost circular, with eccentricity $e = 0.00526$ and $0.00855$, they were not completely circular. This meant that the transfers missed. To get an encounter with Isskji we therefor had to adjust $v_0^2$ and $v_{transfer}^2$ ever so slightly, with what in rocket science terminology is called a \textit{fudge factor}. $v_{transfer}^2$ is very sensitive to changes \cite{SpaceDynamics}, so the changes had to be small. Due to an early error in the code, we did not implement that
+
+\begin{align}
+v_{transfer}^2 = v_0^2 + v_{transfer}^2
+\end{align}  
+
+but
+
+\begin{align}
+v_{transfer} = v_0 + v_{transfer}
+\end{align} 
+
+This meant that the transfers was even more inaccurate. But after 2 days of tweaking we found that with 
+
+\begin{align}
+v_{transfer} = 0.894v_0 + v_{transfer} = 3.525 AU/year
+\end{align} 
+
+we where able to get quite close to Isskji. But not close enough. From \ref{eq:safeDist} we find the distance where we could do an orbital injection was $0.000395 AU$. The satellite was not able to get with in this distance after one launcher burn. A correction burn was then hard coded in, to burn when the distance to Isskji was $0.003 AU$. With a correction burn of $0.5 AU/year$, the satellite was able to do an orbital injection. This burn was of size $0.6253 AU/year$. This gave the simulated trip a total $dv$ of $4.65 AU/year$.\\
+
+\begin{figure}[H]
+\centering
+\includegraphics[width = 70mm]{part3SatOrb.png}
+\caption{We can see that satellite leaves the home planet and encounters Isskji after almost a half orbit. We can see that the satellite follows the orbit of Isskji, but from this picture it is not clear if it is in orbit.}
+\end{figure}
+
+\begin{figure}[H]\label{fig:orbit}
+\centering
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{part3relDist.png}
+\caption{The relative distance from the satellite to Isskji}
+\end{subfigure}%
+~
+\begin{subfigure}[t]{0.5\textwidth}
+\centering
+\includegraphics[width=\textwidth]{part3relDistClose.png}
+\caption{Same as in (a), but zoomed in to Isskji. We can see that we have a circular orbit.}
+\end{subfigure}%
+\end{figure}
+
+We can see from \ref{fig:orbit} that we have simulated a successful journey and orbit around Isskji.
 
 
+\section{Navigation}
 
+\subsection{Velocity}
 
+The reference data when in the rest frame of the star
 
+\begin{tcolorbox}
+Reference star 1, at phi = 77.518724 degrees, \\
+has delta lambda of  -0.017002884383 nm in the home star rest frame. \\
+Reference star 2, at phi = 325.121916 degrees, \\
+has delta lambda of   0.017144686369 nm in the home star rest frame. 
+\end{tcolorbox}
 
+With this, the algorithm to find the velocity went fine, without any problems. We tested it against the trivial case where the satellite got the same doppler shifts as in the rest frame, in other words  the satellite is at rest; and where there were no doppler shift, the satellite has no relative velocity. The first test showed $v_{sat} = 0$, and the second gave that $v_{sat} = v_{refstar}$. This showed that the velocity orientation works.
 
 
 
