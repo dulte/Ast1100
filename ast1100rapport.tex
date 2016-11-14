@@ -708,6 +708,9 @@ After finding a place to land I had to find a way of landing there. Due to the d
 
 I could now simulate this maneuver, and see where I hit the surface. Knowing this position I could use the same method mentioned above to find the local coordinate on the surface. If this coordinate wasn't the desired coordinate the satellite would be asked to way in orbit for some time, then I would simulate the landing again. This procedure would be done until the satellite hit the landing site. This is a very brute force way of doing it, but it should work. 
 
+
+The simulation had $\Delta t = 0.1$, and was run with a guess time, but if the low orbit was achieved, the simulation ended.
+
 \subsubsection{A Safe Landing}
 
 The drag force of the atmosphere is given by:
@@ -733,6 +736,8 @@ I could use this to find the area I need the parachute to have if I wanted to la
 \begin{align}
 A = \frac{2GM_p m_{lander}}{R_p^2 \rho_0 v^2}
 \end{align}
+
+The simulation had $\Delta t = 0.1$, and ended either when the crashed to the ground $v_r > 3$ or landed on the ground $v_r \geq 3$
 
 
 \subsection{Launching the Real Satellite}
@@ -1033,6 +1038,52 @@ The atmosphere of Isskji is quite thick, with $\rho_0 \approx 8$, this means tha
 \caption{Shows the Hohmann transfer from high to low orbit.}
 \end{figure}
 
+In its equatorial orbit at $390 km$ 20 pictures were planed out to look for a suitable landing site.
+
+
+I could have orbited the planet in an polar orbit if I wanted to find a better place to land. In an polar orbit I would wave been able to take pictures of the whole surface. The reason I chose not to go into polar orbit was simply time constrains.
+
+\subsubsection{The Landing}
+Since the acceleration inside the atmosphere is dependent on velocity, leapfrog may be unstable. This is because the velocity is in between steps. But after some trial it seemed that this didn't have so much to say, and I went with a normal leapfrog.\\
+ 
+The height to which I had to do a Hohmann transfer was found, by trial and error, to be $290 km$ below the current orbit. This gave me a nice half orbit before landing:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width = 70mm]{part7landing.png}
+\caption{Shows the half orbit before hitting the ground. The simulation was stopped when hitting the surface, but due to a bug where the last positions in the array is not filled, and thus only contains zeros, it looks like the lander continues to the center of the planet.}
+\end{figure}
+
+And after more trail and error I found that if I let the satellite loiter in orbit for $40950 sec$ after entering the low orbit, before launching the lander. The simulation then gave me the information
+
+\begin{tcolorbox}
+You landed at time 145815 with velocity -2.93852\\
+ParachuteSize:  7.64794319168\\
+Landing Angle:  92.002628546\\
+Landing Angle in Rad:  1.60574878862
+\end{tcolorbox}
+
+The goal was $96.97^\circ$(see below) (being in an equatorial orbit $\theta$ is always $180^\circ$). The simulation said I landed at $96.24^\circ$, which I found satisfactory, and decided to go for it.
+
+My thought was that the simulation of through the atmosphere would be unstable, and that I had to use very small $\Delta t$, but after some trail, it seemed that it needed only the same $\Delta t$ as for the normal orbit $0.1$.
+
+\subsubsection{A Safe Landing}
+As we have seen Isskjis atmosphere is quite thick, $\rho_0 \approx 8$, so I didn't expect that the size of the parachute had to be very large to reach a safe landing velocity of $3m/s$. This turned out to be correct: the parachute need only be  $7.65 m^2$, which is smaller than a standard skydiving parachute.
+
+
+\subsection{Launching the Real Satellite} 
+Then it was time to launch the satellite for real. We waited $6.72$ years and launched. The launch was the same as in the simulation. I asked the satellite to orient it self after 1 and 2 years. The first orientation was the calibration orientation, and went without any hitch. Both orientations showed the satellite to be a little of course, but not by very much. 
+
+\begin{tcolorbox}
+Orient 2:\\
+Expected Position: [ 1.07228774  4.08232315]\\
+Real Position: [1.07602195366 , 4.0834412672]
+\end{tcolorbox}
+
+This was so close that no correction burn was done yet. When the satellite came close to the point of the correction burn, it got the command to do multiple orientations. When the point closest to Isskji was found after $2.05$ years, I decided to do the correction burn, even though it wasn't the same place it the simulation. It was only as small burn $(-0.49152321, 0.26571668)$. One and a half days later the satellite was inside the safe distance from Isskji and was able to do an injection burn of $(0.11537089, -0.32227829)$. The total $\Delta v$ needed on the real journey was $3.145 AU/year$, which is lower than the expected $\Delta v$ from the simulations.\\
+
+Now that the satellite was in orbit it was time to get into a lower orbit. The satellite was asked to orientate right after it had circularized the low orbit. This orientation was somewhat off. The simulation was therefor forced to start at this point, and then circularize again. This time the it worked and the satellite showed a stable low circle orbit.\\
+
 In its equatorial orbit at $390 km$ 20 pictures were taken, between $ 90461-107461 sec$, to find a suitable landing site. Four are shown here (due to the fact that 20 pictures would take a lot of space).
 
 \begin{figure}[H]
@@ -1062,63 +1113,54 @@ In its equatorial orbit at $390 km$ 20 pictures were taken, between $ 90461-1074
 
 Neither in these nor the rest of the pictures showed any place that sticks out. But I chose to land at the site showed in the upper left picture, due to the small lake surrounded by, what looks like, two mountains. I found that the local coordinates were $(180^\circ , 96.97^\circ)$. \\
 
-
-I could have orbited the planet in an polar orbit if I wanted to find a better place to land. In an polar orbit I would wave been able to take pictures of the whole surface. The reason I chose not to go into polar orbit was simply time constrains.
-
-\subsubsection{The Landing}
-
-The height to which I had to do a Hohmann transfer was found, by trial and error, to be $290 km$ below the current orbit. This gave me a nice half orbit before landing:
-
-\begin{figure}[H]
-\centering
-\includegraphics[width = 70mm]{part7landing.png}
-\caption{Shows the half orbit before hitting the ground. The simulation was stopped when hitting the surface, but due to a bug where the last positions in the array is not filled, and thus only contains zeros, it looks like the lander continues to the center of the planet.}
-\end{figure}
-
-And after more trail and error I found that if I let the satellite loiter in orbit for $40950 sec$ after entering the low orbit, before launching the lander. The simulation then gave me the information
+After waiting the $40950 sec$, the lander was launched, and the whole control room was deadly silent in the wait for the lander to make contact after landing. And then this message was received:
 
 \begin{tcolorbox}
-You landed at time 145815 with velocity -2.93852\\
-ParachuteSize:  7.64794319168\\
-Landing Angle:  92.002628546\\
-Landing Angle in Rad:  1.60574878862
+Successful landing! Landed on planet nr 1 at time 145361 s with velocity 2.99479 m/s. Congratulations! \\
+Landing site: phi =  93.8127183984 deg,  theta =  90.0 deg.
 \end{tcolorbox}
 
-The goal was $96.97^\circ$ (being in an equatorial orbit $\theta$ is always $180^\circ$). The simulation said I landed at $92^\circ$, which I found satisfactory, and decided to go for it.
+And the control room exploded in ecstasy! My planned landing site was $96.97^\circ$, my simulated landing site was $96.24^\circ$ and the real landing site was at $93.81^\circ$. And the lander had landed just under $3 m/s$ without any need for landing boosters. The mission seemed to be a huge success! \\
 
-\subsubsection{A Safe Landing}
-As we have seen Isskjis atmosphere is quite thick, $\rho_0 \approx 8$, so I didn't expect that the size of the parachute had to be very large to reach a safe landing velocity of $3m/s$. This turned out to be correct: the parachute need only be  $7.65 m^2$, which is smaller than a standard skydiving parachute.
-
-
-\subsection{Launching the Real Satellite} 
-Then it was time to launch the satellite for real. We waited $6.72$ years and launched. The launch was the same as in the simulation. I asked the satellite to orient it self after 1 and 2 years. The first orientation was the calibration orientation, and went without any hitch. Both orientations showed the satellite to be a little of course, but not by very much. 
-
-\begin{tcolorbox}
-Orient 2:\\
-Expected Position: [ 1.07228774  4.08232315]\\
-Real Position: [1.07602195366 , 4.0834412672]
-\end{tcolorbox}
-
-This was so close that no correction burn was done yet. When the satellite came close to the point of the correction burn, it got the command to do multiple orientations. When the point closest to Isskji was found after $2.05$ years, I decided to do the correction burn, even though it wasn't the same place it the simulation. It was only as small burn $(-0.49152321, 0.26571668)$. One and a half days later the satellite was inside the safe distance from Isskji and was able to do an injection burn of $(0.11537089, -0.32227829)$. The total $\Delta v$ needed on the real journey was $3.145 AU/year$, which is lower than the expected $\Delta v$ from the simulations.\\
-
-
+But then the landing video came back, and the landing site looked nothing like the picture. The simulation and the real landers coordinates matched well, so the mistake must have happened when converting the picture in to the local coordinate on the surface. I looked carefully though the code, but I could not find the mistake. We were so close to total success!  
 
 
 
 \section{Appendix A: Numerical Methods}
 \subsection{Leapfrog}\label{sec:leap}
 
+Leap frog is a method for integrating functions with a known starting point, of the form \cite{leap} 
+
+\begin{align}
+\frac{dx}{dt} = F(x)
+\end{align}
+
+The algorithm goes like
+
+$$
+x_i = x_{i-1} + v_{i-1/2}\Delta t
+$$
+
+$$
+a_i = F(x_i)
+$$
+
+$$
+v_{i+1/2} = v_{i-1/2} + a_i \Delta t
+$$
+
+An easier way of implementing this is by the algorithm
+
+\begin{enumerate}
+\item Update $v_{i+1/2} = v_{i} + 0.5a_i \Delta t$
+\item Loop over doing a normal forward Euler.
+\end{enumerate}
+
+Leap frog is of seconds order \cite{leap2}. But the strength of leapfrog is that it is suited for dynamical system. It conserves energy well in oscillating system. It may not conserve energy during an oscillation, but it is conserved between oscillations. \\
+
+Implemented as stated above, the leapfrog is as fast as Euler-Cromer. 
 \subsection{Gradient descend}\label{sec:gradient}
 
- 
-\begin{itemize}
-\item $F_b$: Force from \textit{one} box.
-\item $n_b$: Number of boxes.
-\item $m_l$: Mass of the satellite.
-\item $m_f$: Mass of the fuel.
-\item $m_e$: Mass of the particles escaping per second per box.
-\item $m_{f0}$: Mass of fuel when launching.
-\end{itemize}
 
 \section{Appendix B: Fuel Equation}\label{sec:Fuel}
 
