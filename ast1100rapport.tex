@@ -697,14 +697,14 @@ and the temperature here is alway $T_0/2$. $\rho_0' = \rho_0 \left( \frac{1}{2} 
 
 
 \subsection{Landing}
-After getting into orbit around Isskji, I Int from astronomical units to SI units, due to the smaller distances and velocities. The origin of the coordinate system was also chanced from the center of the sun to the center of Isskji.
+After getting into orbit around Isskji, I went from astronomical units to SI units, due to the smaller distances and velocities. The origin of the coordinate system was also chanced from the center of the sun to the center of Isskji.
 
 \subsubsection{Low orbit}
-After getting the satellite in orbit around Isskji, I had to fin a way of getting it in a low-Isskji orbit to take pictures and decide where to land.\\
+After getting the satellite in orbit around Isskji, I had to find a way of getting it in a low-Isskji orbit to take pictures, and decide where to land.\\
 
-To get a stable orbit I had to try to stay clear of the atmosphere. I decided to go to a hight where the density of the atmosphere $\rho (h) < 10^{-12}$. This was then simulated to ensure a stable orbit. I then used a Hohmann transfer to get to the desired hight, and when the satellite reach this hight, the orbit was circularized. The satellite when Int in an equatorial orbit to scout the planet for a landing site.\\
+To get a stable orbit I had to try to stay clear of the atmosphere. I decided to go to a hight where the density of the atmosphere $\rho (h) < 10^{-12}$. This was then simulated to ensure a stable orbit. I then used a Hohmann transfer to get to the desired hight, and when the satellite reach this hight, the orbit was circularized. The satellite when went in an equatorial orbit to scout the planet for a landing site.\\
 
-To translate the picture in to a coordinate on the surface of the planet, I asked the satellite to orient it self right after the picture was taken. I then took the position vector of the satellite and turned it around, so it now pointed at the center of the planet. I could now find the angles of the landing site. But this was the angles of the surface of the planet in a global coordinates. since the surface rotates, this global coordinate is not the same as the local coordinate at the surface. One time I Ire sure the global coordinate Ire the same was at the time I entered the first orbit(this time was set to $t = 0$, and I define that the local and global coordinates are the same at this point). To find the global coordinate at $t_0$, I used the rotational period (in earth days) of the planet $\tau_p$ (since I Ire in an equatorial orbit, $\theta = \pi /2$, so I am only interested in $\phi$)
+To translate the picture in to a coordinate on the surface of the planet, I asked the satellite to orient it self right after the picture was taken. I then took the position vector of the satellite and turned it around, so it now pointed at the center of the planet. I could now find the angles of the landing site. But this was the angles of the surface of the planet in a global coordinates. Since the surface rotates, this global coordinate is not the same as the local coordinate at the surface. One time I was sure the global coordinate were the same was at the time the satellite entered the first orbit(this time was set to $t = 0$, and the local and global coordinates were defined to the same at this point). To find the global coordinate at $t_0$, I used the rotational period (in earth days) of the planet $\tau_p$ (since I were in an equatorial orbit, $\theta = \pi /2$, so I was only interested in $\phi$)
 
 \begin{align}
 \phi = tan^{-1}\left(\frac{y_{sat-planet}}{x_{sat-planet}} \right) - \frac{1}{\tau}t_{years}\cdot 2\pi
@@ -715,9 +715,9 @@ To translate the picture in to a coordinate on the surface of the planet, I aske
 I then had the coordinate I wanted to land.
 
 \subsubsection{The Landing}
-After finding a place to land I had to find a way of landing there. Due to the difficulty of solving the landers interaction with the atmosphere in any smart way, this was done with brute force and guessing. The idea was to use another Hohmann transfer to some hight inside the atmosphere. The goal was to find a hight such that I would land on the surface after a half orbit. This hight was a result of trial and error. \\
+After finding a place to land, I had to find a way of landing there. Due to the difficulty of solving the landers interaction with the atmosphere in any smart way, this was done with brute force and guessing. The idea was to use another Hohmann transfer to some hight inside the atmosphere. The goal was to find a hight such that the lander would land on the surface after a half orbit. This hight was a result of trial and error. \\
 
-I could now simulate this maneuver, and see where I hit the surface. Knowing this position I could use the same method mentioned above to find the local coordinate on the surface. If this coordinate wasn't the desired coordinate the satellite would be asked to way in orbit for some time, then I would simulate the landing again. This procedure would be done until the satellite hit the landing site. This is a very brute force way of doing it, but it should work. 
+I could now simulate this maneuver, and see where I hit the surface. Knowing this position I could use the same method mentioned above to find the local coordinate on the surface. If this coordinate wasn't the desired coordinate the satellite would be asked to wait in orbit for some time, then I would simulate the landing again. This procedure would be done until the lander hit the landing site. This is a very brute force way of doing it, but it should work. 
 
 
 The simulation had $\Delta t = 0.1$, and was run with a guess time, but if the low orbit was achieved, the simulation ended.
@@ -736,13 +736,13 @@ $C_D$ is a coefficient determined by the geometry of the lander, and is set equa
 \frac{GM_p m_l}{R^2} = \frac{1}{2}\rho C_D A |\bold{v}| \bold{v}
 \end{align}
 
-If I use the radius of the planet and the density of at the surface, I can find the terminal velocity at close to the surface.
+If we use the radius of the planet and the density of at the surface, we can find the terminal velocity at close to the surface.
 
 \begin{align}
 v = \sqrt{\frac{2GM_p m_{lander}}{R_p^2 \rho_0 A}}
 \end{align}
 
-I could use this to find the area I need the parachute to have if I wanted to land safely. 
+I could use this to find the area I needed the parachute to have if I wanted to land safely. 
 
 \begin{align}
 A = \frac{2GM_p m_{lander}}{R_p^2 \rho_0 v^2}
@@ -771,7 +771,7 @@ Analytical energy:  2.07e-19 \\
 Numerical energy:  2.06623799518e-19 
 \end{tcolorbox}
 
-As I can see, the numerical and analytical results have relative errors within a factor of $10^{-4}$, meaning that out simulation are quite accurate.
+The numerical and analytical results have relative errors within a factor of $10^{-4}$, meaning that the simulation are quite accurate.
 
 The data from the engine was as follows:
 
@@ -783,7 +783,7 @@ Number of particles escaped per sec:  6.4252e+13 \\
 Mass lost per sec:  2.120316e-13
 \end{tcolorbox}
 
-I can see that the force exerted by a single box is minuscule, and a lot of boxes are needed to lift the satellite of the ground. \\
+The force exerted by a single box is minuscule, and a lot of boxes are needed to lift the satellite of the ground. \\
 
 The data above are from one specific simulation, and will vary enough to make results in later parts of this article a bit different. I will therefor use the data given here for all subsequent situations where they are needed.
 
@@ -791,7 +791,7 @@ The data above are from one specific simulation, and will vary enough to make re
 
 Using equation \ref{eq:escape} I see that $v_{escape} \approx 16596.9 m/s$. And from \ref{eq:boxes} I get that the amount of boxes I need are $n = 1.76 \cdot 10^{13}$. \\
 
-The plot I get from launching the satellite without fuel loss:
+The plot I got from launching the satellite without fuel loss:
 
 
 \begin{figure}[H]
@@ -811,12 +811,12 @@ The plot of the launch with fuel loss shows how the satellite loses fuel as it a
 \end{center}
 \end{figure}
 
-The plot over that as the satellite reaches escape velocity, the mass of the fuel goes to more or less zero. This indicates that my expression for fuel gives the correct amount of fuel.
+This shows that as the satellite reaches escape velocity, the mass of the fuel goes to more or less zero. This indicates that my expression for fuel gives the correct amount of fuel.
 
 \subsection{Simulation of out Solar System}
 \subsubsection{2-body problem}
 
-The first result is with one planet and the sun. I choose to just look at the largest planet and the sun
+The first result is with one planet and the sun. I chose to just look at the largest planet and the sun
 
 
 \begin{figure}[H]
@@ -826,7 +826,7 @@ The first result is with one planet and the sun. I choose to just look at the la
 \end{center}
 \end{figure}
 
-I can see that I have the circular motion I expect, so it passes the rudimentary test for what I expect from planet-sun-system. \\ 
+I got the circular motion I expect, so it passes the rudimentary test for what could be expected from planet-sun-system. \\ 
 
 It is more interesting to look at the whole system of 9 planets.
 
@@ -845,13 +845,13 @@ It is more interesting to look at the whole system of 9 planets.
 \end{subfigure}%
 \end{figure}
 
-I can see that even for the inner planets the simulation seem stable. Since these planets is closer to the sun, they will have orbited more times than the outer planet. There is an error from the numerical method for each orbit, these planets are expected to have accumulated a greater error than the outer planets. Since the I can see that the orbits are stable for the inner planets, I know that the orbits are stable for the rest of the system as Ill.\\
+Even for the inner planets the simulation seem stable. Since these planets are closer to the sun, they will have orbited more times than the outer planet. There is an error from the numerical method for each orbit, these planets are expected to have accumulated a greater error than the outer planets. Since the orbits are stable for the inner planets, I know that the orbits are stable for the rest of the system as Ill.\\
 
-The orbits Ire checked against the analytical solutions, and over the 20 year period, the largest relative error was no more than $0.0036\%$.
+The orbits were checked against the analytical solutions, and over the 20 year period, the largest relative error was no more than $0.0036\%$.
 
 
 \subsubsection{N-body problem}
-I am interested in seeing how the other planets influence the sun.
+I was interested in seeing how the other planets influence the sun.
 
 \begin{figure}[H]
 \begin{center}
@@ -876,15 +876,15 @@ I am interested in seeing how the other planets influence the sun.
 \end{subfigure}%
 \end{figure}
 
-I can see that even with noise added to the velocity, the motion is still clearly visible. The difference in velocity is $\pm 0.6 m/s$. With todays technology I am only capable of observing velocity differences of $1 m/s$, meaning that despite there being a clear motion in the data, someone with our technology would not be able to observe it.
+Even with noise added to the velocity, the motion is still clearly visible. The difference in velocity is $\pm 0.6 m/s$. With todays technology we're only capable of observing velocity differences of $1 m/s$, meaning that despite there being a clear motion in the data, someone with our technology would not be able to observe it.
 
 
 
 
 \subsection{Information about the planet}
-Out star has a temperature of $8284.6 K$, and a radius of $1610671.4 km$. The solar panels I used have an efficiency of $12\%$. Using this and \ref{eq:area} I found that the necessary area of the solar panels to have $40W$ of poIr was   $17.6 m^2$. \\
+The star has a temperature of $8284.6 K$, and a radius of $1610671.4 km$. The solar panels the satellite used had an efficiency of $12\%$. Using this and \ref{eq:area} I found that the necessary area of the solar panels to have $40W$ of poIr was   $17.6 m^2$. \\
 
-I know that the habitable zone is the zone in the solar system where $T \in [260,390]$, from \ref{eq:temp} I found the habitable zone to be $r \in [8.1765\cdot 10^8,3.63402\cdot 10^8]$ in $km$. This meant that Isskji, being $6.38 \cdot 10^8 km$ from the sun, was i the middle of the habitable zone.The calculated surface temperature of Isskji is $294.4 K$, a quite comfortable temperature. This was what I had expected after earlier telescope images had shown Isskji to be a garden planet. This gave insured us that Isskji was an interesting planet to explore, in the hope of finding life (the fact that it is our neighbor planet also played a role in the decision.) 
+The habitable zone is the zone in the solar system where $T \in [260,390]$, from \ref{eq:temp} I found the habitable zone to be $r \in [8.1765\cdot 10^8,3.63402\cdot 10^8]$ in $km$. This meant that Isskji, being $6.38 \cdot 10^8 km$ from the sun, was in the middle of the habitable zone. The calculated surface temperature of Isskji is $294.4 K$, a quite comfortable temperature. This was what I had expected after earlier telescope images had shown Isskji to be a garden planet. This gave insured my that Isskji was an interesting planet to explore, in the hope of finding life (the fact that it is our neighbor planet also played a role in the decision.) 
 
 \subsection{Planing the Journey}
 
