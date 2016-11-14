@@ -960,7 +960,7 @@ Every thing seemed to work perfectly with this part. I got the correct position 
 \frac{\partial E}{\partial x_i} = \frac{8}{N}\sum_{j=1}^N (d_j^{guess} - d_j^{real}){(x_ij^{guess} - x_ij^{planet}}){d_j^{guess}}
 \end{align}
 
-When I changed this to real expression, the success rate of this method Int down from $95-100\%$ to $60-90\%$. I do not have a clue why the wrong expression works while \ref{eq:gradient} doesn't. There may be something wrong in our math, so that the "wrong" expression is the correct one, but I do not know.
+When I changed this to real expression, the success rate of this method Int down from $95-100\%$ to $60-90\%$. I do not have a clue why the wrong expression works while \ref{eq:gradient} doesn't. There may be something wrong in our math, so that the "wrong" expression is the correct one, but I do not know. We can also work with the $10-40 \%$ error, we only have to do the gradient descent a with a couple of random guesses and use the most probable result.
 
 \subsection{Simulating the Atmosphere}
 \subsubsection{The Mean Molecular Weight of the Atmosphere}
@@ -1161,6 +1161,35 @@ Leap frog is of seconds order \cite{leap2}. But the strength of leapfrog is that
 Implemented as stated above, the leapfrog is as fast as Euler-Cromer. 
 \subsection{Gradient descend}\label{sec:gradient}
 
+Gradient descent is a numerical method for minimizing an error function. The error function in our problem is
+
+\begin{align}
+E(x_1,x_2) = \sum_{j=1}^N(d_j^{guess} - d_j^{real})^2
+\end{align} 
+
+where 
+
+\begin{align}
+d_j^{guess} = \sqrt{(x_1^{guess}-x_1^{planet}) + (x_2^{guess}-x_2^{planet})}
+\end{align}
+
+$E(x_1,x_2)$ makes up a potential surface, and we are interested in finding the global minimum of this surface. We know that the gradient $\nabla E(x_1,x_2)$ at a point is a vector that point towards a maximum. Knowing that it is easy to see that if we go a small in the opposite direction of the gradient in that point, we will go towards the minimum. This is the idea behind gradient descent. The algorithm is
+
+\begin{enumerate}
+\item Start with a guess.
+\item Loop over a fixed number of steps (I used $10^{5}$)
+\item Update the guess' coordinate $x_i$ with $\omega \frac{\partial E}{\partial x_i}$ for each step.
+\end{enumerate}
+
+Where $\frac{\partial E}{\partial x_i}$ is the error function differentiated for $x_i$
+
+\begin{align}\label{eq:gradient}
+\frac{\partial E}{\partial x_i} = \frac{2}{N}\sum_{j=1}^N (d_j^{guess} - d_j^{real})\frac{(x_ij^{guess} - x_ij^{planet}}{d_j^{guess}})
+\end{align}
+
+the weight $\omega$ is important. If $\frac{\partial E}{\partial x_i}$ is larger than the width of the well of the minimum, we are going to climb out of this well, and we may end up diverging instead of  covering. Because of this we multiply $\frac{\partial E}{\partial x_i}$ by some $\omega < 1$ to keep $\frac{\partial E}{\partial x_i}$ smaller than the well.\\
+
+The problem with gradient descent is that it doesn't only find global minimums, but also local ones. This may be the case with our error function, but these are so large that the gradient descent more often finds the global.
 
 \section{Appendix B: Fuel Equation}\label{sec:Fuel}
 
